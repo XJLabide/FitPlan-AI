@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { Suspense, useState, useEffect, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { DashboardNav } from "@/components/dashboard-nav"
@@ -22,7 +22,26 @@ const dietaryOptions = [
     { value: "high_protein", label: "High Protein" },
 ]
 
+// Wrapper component to handle Suspense boundary for useSearchParams
 export default function GenerateMealPlanPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-zinc-950">
+                <DashboardNav />
+                <div className="flex items-center justify-center py-20">
+                    <div className="text-center">
+                        <div className="h-8 w-8 animate-spin rounded-full border-4 border-orange-500 border-t-transparent mx-auto" />
+                        <p className="mt-4 text-zinc-400">Loading...</p>
+                    </div>
+                </div>
+            </div>
+        }>
+            <GenerateMealPlanContent />
+        </Suspense>
+    )
+}
+
+function GenerateMealPlanContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const hasAutoStarted = useRef(false)
@@ -180,8 +199,8 @@ export default function GenerateMealPlanPage() {
                                     <div
                                         key={option.value}
                                         className={`flex items-center space-x-3 rounded-xl border p-4 transition-all cursor-pointer ${preferences.dietary_preferences.includes(option.value)
-                                                ? "border-orange-500 bg-zinc-800"
-                                                : "border-zinc-800 bg-zinc-900 hover:border-zinc-700"
+                                            ? "border-orange-500 bg-zinc-800"
+                                            : "border-zinc-800 bg-zinc-900 hover:border-zinc-700"
                                             }`}
                                         onClick={() =>
                                             handlePreferenceChange(
