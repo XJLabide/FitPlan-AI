@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { ArrowLeft } from "lucide-react"
 
 interface Exercise {
   id: string
@@ -41,7 +42,14 @@ interface ExerciseLog {
   notes: string
 }
 
-export function WorkoutTracker({ workout }: { workout: Workout }) {
+interface PreviousLogData {
+  weight_used: number
+  sets_completed: number
+  reps_completed: string
+  notes: string
+}
+
+export function WorkoutTracker({ workout, previousLogs = {} }: { workout: Workout; previousLogs?: Record<string, PreviousLogData> }) {
   const router = useRouter()
   const [exerciseCompleted, setExerciseCompleted] = useState<Record<string, boolean>>(
     workout.exercises.reduce(
@@ -54,18 +62,21 @@ export function WorkoutTracker({ workout }: { workout: Workout }) {
   )
   const [exerciseLogs, setExerciseLogs] = useState<Record<string, ExerciseLog>>(
     workout.exercises.reduce(
-      (acc, ex) => ({
-        ...acc,
-        [ex.id]: {
-          exercise_id: ex.id,
-          exercise_name: ex.exercise_name,
-          sets_completed: ex.sets || 0,
-          reps_completed: ex.reps || "",
-          weight_used: 0,
-          duration_minutes: ex.duration_minutes,
-          notes: "",
-        },
-      }),
+      (acc, ex) => {
+        const prevLog = previousLogs[ex.id]
+        return {
+          ...acc,
+          [ex.id]: {
+            exercise_id: ex.id,
+            exercise_name: ex.exercise_name,
+            sets_completed: prevLog?.sets_completed ?? ex.sets ?? 0,
+            reps_completed: prevLog?.reps_completed ?? ex.reps ?? "",
+            weight_used: prevLog?.weight_used ?? 0,
+            duration_minutes: ex.duration_minutes,
+            notes: prevLog?.notes ?? "",
+          },
+        }
+      },
       {},
     ),
   )
@@ -73,8 +84,12 @@ export function WorkoutTracker({ workout }: { workout: Workout }) {
   const [sessionFeeling, setSessionFeeling] = useState<"easy" | "moderate" | "hard" | "very_hard">("moderate")
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [hasChanges, setHasChanges] = useState(false)
+
+  const isWorkoutCompleted = workout.completed
 
   const updateExerciseLog = (exerciseId: string, field: string, value: string | number) => {
+    setHasChanges(true)
     setExerciseLogs((prev) => ({
       ...prev,
       [exerciseId]: {
@@ -114,12 +129,15 @@ export function WorkoutTracker({ workout }: { workout: Workout }) {
       // Log each completed exercise
       const completedExercises = Object.entries(exerciseCompleted)
         .filter(([_, completed]) => completed)
-        .map(([exerciseId]) => ({
-          user_id: user.id,
-          session_id: session.id,
-          exercise_id: exerciseId,
-          ...exerciseLogs[exerciseId],
-        }))
+        .map(([exerciseId]) => {
+          const { exercise_id: _, ...logData } = exerciseLogs[exerciseId]
+          return {
+            user_id: user.id,
+            session_id: session.id,
+            exercise_id: exerciseId,
+            ...logData,
+          }
+        })
 
       if (completedExercises.length > 0) {
         const { error: logsError } = await supabase.from("exercise_logs").insert(completedExercises)
@@ -161,6 +179,16 @@ export function WorkoutTracker({ workout }: { workout: Workout }) {
 
   return (
     <div className="space-y-6">
+      {/* Back Button */}
+      <Button
+        variant="ghost"
+        onClick={() => router.push("/dashboard/workouts")}
+        className="text-zinc-400 hover:text-white hover:bg-zinc-800"
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back to Workouts
+      </Button>
+
       {/* Workout Header */}
       <Card className="border-zinc-800 bg-zinc-900">
         <CardHeader>
@@ -170,7 +198,9 @@ export function WorkoutTracker({ workout }: { workout: Workout }) {
             </div>
             <div>
               <CardTitle className="text-white">{workout.workout_name}</CardTitle>
-              <CardDescription className="text-zinc-400">{workout.exercises.length} exercises to complete</CardDescription>
+              <CardDescription className="text-zinc-400">
+                {isWorkoutCompleted ? "Completed" : `${workout.exercises.length} exercises to complete`}
+              </CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -211,9 +241,11 @@ export function WorkoutTracker({ workout }: { workout: Workout }) {
             </div>
 
             {/* Actual Performance */}
-            {exerciseCompleted[exercise.id] && (
+            {(exerciseCompleted[exercise.id] || isWorkoutCompleted) && (
               <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-white">Log Your Performance</h4>
+                <h4 className="text-sm font-semibold text-white">
+                  {isWorkoutCompleted ? "Logged Performance" : "Log Your Performance"}
+                </h4>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {exercise.sets && (
                     <div className="space-y-2">
@@ -348,14 +380,26 @@ export function WorkoutTracker({ workout }: { workout: Workout }) {
 
           {error && <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
 
-          <Button onClick={handleCompleteWorkout} disabled={!allCompleted || isSaving} size="lg" className="w-full bg-orange-500 text-white hover:bg-orange-600">
-            {isSaving ? "Saving..." : allCompleted ? "Complete Workout" : "Mark All Exercises as Complete"}
-          </Button>
+          {isWorkoutCompleted ? (
+            /* For completed workouts, show Update button only when changes are made */
+            hasChanges && (
+              <Button onClick={handleCompleteWorkout} disabled={isSaving} size="lg" className="w-full bg-orange-500 text-white hover:bg-orange-600">
+                {isSaving ? "Updating..." : "Update Workout"}
+              </Button>
+            )
+          ) : (
+            /* For new workouts, show Complete Workout button */
+            <>
+              <Button onClick={handleCompleteWorkout} disabled={!allCompleted || isSaving} size="lg" className="w-full bg-orange-500 text-white hover:bg-orange-600">
+                {isSaving ? "Saving..." : allCompleted ? "Complete Workout" : "Mark All Exercises as Complete"}
+              </Button>
 
-          {!allCompleted && (
-            <p className="text-center text-sm text-zinc-500">
-              Check off all exercises to complete this workout
-            </p>
+              {!allCompleted && (
+                <p className="text-center text-sm text-zinc-500">
+                  Check off all exercises to complete this workout
+                </p>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

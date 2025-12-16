@@ -70,7 +70,16 @@ function buildWorkoutPrompt(data: OnboardingData): string {
     - Limitations: ${data.injuries_limitations || "None"}
 
     Generate a ${data.available_days.length}-day workout routine.
-    IMPORTANT: Generate exactly ${data.available_days.length} workouts, one for each available day (${data.available_days.join(", ")}).
+    IMPORTANT: Generate exactly ${data.available_days.length} workouts, one for each available day.
+    
+    CRITICAL: The workout_name MUST start with the exact day name from the available days list, in order:
+    - Workout 1 (day_number: 1) must be for ${data.available_days[0] || "Day 1"}
+    - Workout 2 (day_number: 2) must be for ${data.available_days[1] || "Day 2"}
+    ${data.available_days[2] ? `- Workout 3 (day_number: 3) must be for ${data.available_days[2]}` : ""}
+    ${data.available_days[3] ? `- Workout 4 (day_number: 4) must be for ${data.available_days[3]}` : ""}
+    ${data.available_days[4] ? `- Workout 5 (day_number: 5) must be for ${data.available_days[4]}` : ""}
+    ${data.available_days[5] ? `- Workout 6 (day_number: 6) must be for ${data.available_days[5]}` : ""}
+    ${data.available_days[6] ? `- Workout 7 (day_number: 7) must be for ${data.available_days[6]}` : ""}
     
     Return a JSON object with this exact structure:
     {
@@ -79,7 +88,7 @@ function buildWorkoutPrompt(data: OnboardingData): string {
       "workouts": [
         {
           "day_number": number (1 to ${data.available_days.length}),
-          "workout_name": "string (e.g., 'Upper Body Power', 'Monday Full Body')",
+          "workout_name": "string (format: '[DayName] - [Focus]', e.g., '${data.available_days[0] || "Monday"} - Upper Body')",
           "exercises": [
             {
               "exercise_name": "string",

@@ -94,10 +94,10 @@ export default async function ProgressPage() {
                 {sessions.map((session) => {
                   const sessionLogs = exerciseLogs?.filter((log) => log.session_id === session.id) || []
                   return (
-                    <div key={session.id} className="rounded-lg border bg-card p-4">
+                    <div key={session.id} className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-4">
                       <div className="flex items-start justify-between">
                         <div className="space-y-1">
-                          <p className="font-semibold">
+                          <p className="font-semibold text-white">
                             {new Date(session.session_date).toLocaleDateString("en-US", {
                               weekday: "long",
                               year: "numeric",
@@ -105,22 +105,22 @@ export default async function ProgressPage() {
                               day: "numeric",
                             })}
                           </p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-sm text-zinc-400">
                             {sessionLogs.length} exercises completed • Felt{" "}
                             <span className="capitalize">{session.overall_feeling || "N/A"}</span>
                           </p>
                           {session.notes && (
-                            <p className="mt-2 text-sm italic text-muted-foreground">{session.notes}</p>
+                            <p className="mt-2 text-sm italic text-zinc-500">{session.notes}</p>
                           )}
                         </div>
                       </div>
                       {sessionLogs.length > 0 && (
-                        <div className="mt-4 space-y-2 border-t pt-4">
-                          <p className="text-sm font-semibold">Exercises:</p>
+                        <div className="mt-4 space-y-2 border-t border-zinc-800 pt-4">
+                          <p className="text-sm font-semibold text-zinc-400">Exercises:</p>
                           {sessionLogs.map((log) => (
                             <div key={log.id} className="flex items-center justify-between text-sm">
-                              <span>{log.exercise_name}</span>
-                              <span className="text-muted-foreground">
+                              <span className="text-white">{log.exercise_name}</span>
+                              <span className="text-zinc-400">
                                 {log.sets_completed && `${log.sets_completed} × `}
                                 {log.reps_completed}
                                 {log.weight_used > 0 && ` @ ${log.weight_used}kg`}
@@ -134,7 +134,7 @@ export default async function ProgressPage() {
                 })}
               </div>
             ) : (
-              <div className="py-8 text-center text-muted-foreground">
+              <div className="py-8 text-center text-zinc-500">
                 <p>No workout sessions yet. Start your first workout to see your progress here!</p>
               </div>
             )}

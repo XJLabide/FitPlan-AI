@@ -33,7 +33,7 @@ export default function SignUpPage() {
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -43,7 +43,16 @@ export default function SignUpPage() {
           },
         },
       })
+
       if (error) throw error
+
+      // Check if user already exists (Supabase returns user with identities = [] for existing users)
+      if (data?.user?.identities?.length === 0) {
+        setError("An account with this email already exists. Please sign in instead.")
+        setIsLoading(false)
+        return
+      }
+
       router.push("/auth/sign-up-success")
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred")
