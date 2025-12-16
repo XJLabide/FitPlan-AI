@@ -58,44 +58,41 @@ function buildWorkoutPrompt(data: OnboardingData): string {
     advanced: "an advanced athlete with extensive training experience",
   }
 
-  return `Create a personalized ${data.available_days}-day workout plan for ${levelDescriptions[data.fitness_level]} whose primary goal is to ${goalDescriptions[data.primary_goal]}.
+  return `Create a personalized workout plan for ${levelDescriptions[data.fitness_level]} whose primary goal is to ${goalDescriptions[data.primary_goal]}.
 
-Workout Details:
-- Fitness Level: ${data.fitness_level}
-- Available Days per Week: ${data.available_days}
-- Session Duration: ${data.session_duration} minutes
-- Available Equipment: ${data.equipment_access.join(", ")}
-${data.injuries_limitations ? `- Injuries/Limitations: ${data.injuries_limitations}` : ""}
+/*
+    User Profile:
+    - Fitness Level: ${data.fitness_level}
+    - Primary Goal: ${data.primary_goal}
+    - Days Available: ${data.available_days.join(", ")}
+    - Session Duration: ${data.session_duration} minutes
+    - Equipment: ${data.equipment_access.join(", ")}
+    - Limitations: ${data.injuries_limitations || "None"}
 
-Requirements:
-1. Create ${data.available_days} distinct workouts (one for each day)
-2. Each workout should fit within ${data.session_duration} minutes
-3. Use ONLY the available equipment: ${data.equipment_access.join(", ")}
-4. Include proper warm-up exercises
-5. For each exercise, specify: sets, reps (or duration), and rest periods
-6. Provide exercise notes with form cues and modifications if needed
-${data.injuries_limitations ? `7. IMPORTANT: Avoid exercises that aggravate: ${data.injuries_limitations}` : ""}
-
-Return the plan in this exact JSON format:
-{
-  "plan_name": "Descriptive plan name",
-  "description": "Brief overview of the plan and what to expect",
-  "workouts": [
+    Generate a ${data.available_days.length}-day workout routine.
+    IMPORTANT: Generate exactly ${data.available_days.length} workouts, one for each available day (${data.available_days.join(", ")}).
+    
+    Return a JSON object with this exact structure:
     {
-      "day_number": 1,
-      "workout_name": "Day 1 workout name",
-      "exercises": [
+      "plan_name": "string",
+      "description": "string",
+      "workouts": [
         {
-          "exercise_name": "Exercise name",
-          "sets": 3,
-          "reps": "10-12",
-          "duration_minutes": null,
-          "rest_seconds": 60,
-          "notes": "Form cues and tips",
-          "order_index": 0
+          "day_number": number (1 to ${data.available_days.length}),
+          "workout_name": "string (e.g., 'Upper Body Power', 'Monday Full Body')",
+          "exercises": [
+            {
+              "exercise_name": "string",
+              "sets": number,
+              "reps": "string",
+              "duration_minutes": number (optional),
+              "rest_seconds": number,
+              "notes": "string (optional)",
+              "order_index": number
+            }
+          ]
         }
       ]
     }
-  ]
-}`
+  */`
 }

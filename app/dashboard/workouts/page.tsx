@@ -32,16 +32,16 @@ export default async function WorkoutsPage() {
     .order("day_number", { ascending: true })
 
   return (
-    <div className="min-h-screen bg-muted/50">
+    <div className="min-h-screen bg-zinc-950">
       <DashboardNav />
       <div className="mx-auto max-w-7xl space-y-6 p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Your Workouts</h1>
-            <p className="text-muted-foreground">View and manage all your workout sessions</p>
+            <h1 className="text-3xl font-bold text-white">Your Workouts</h1>
+            <p className="text-zinc-400">View and manage all your workout sessions</p>
           </div>
           {activePlan && (
-            <Button asChild variant="outline" className="bg-transparent">
+            <Button asChild variant="outline" className="border-zinc-800 bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white">
               <Link href="/dashboard/generate-plan">Generate New Plan</Link>
             </Button>
           )}
@@ -50,20 +50,20 @@ export default async function WorkoutsPage() {
         {activePlan && workouts && workouts.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2">
             {workouts.map((workout) => (
-              <Card key={workout.id}>
+              <Card key={workout.id} className="border-zinc-800 bg-zinc-900">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500 text-lg font-bold text-white">
                         {workout.day_number}
                       </div>
                       <div>
-                        <CardTitle>{workout.workout_name}</CardTitle>
-                        <CardDescription>{workout.exercises?.length || 0} exercises</CardDescription>
+                        <CardTitle className="text-white">{workout.workout_name}</CardTitle>
+                        <CardDescription className="text-zinc-400">{workout.exercises?.length || 0} exercises</CardDescription>
                       </div>
                     </div>
                     {workout.completed && (
-                      <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                      <span className="rounded-full bg-green-500/20 px-3 py-1 text-sm font-medium text-green-400">
                         Completed
                       </span>
                     )}
@@ -72,17 +72,17 @@ export default async function WorkoutsPage() {
                 <CardContent>
                   <div className="space-y-2">
                     {workout.exercises?.slice(0, 3).map((exercise: { id: string; exercise_name: string }) => (
-                      <div key={exercise.id} className="text-sm text-muted-foreground">
+                      <div key={exercise.id} className="text-sm text-zinc-400">
                         • {exercise.exercise_name}
                       </div>
                     ))}
                     {workout.exercises && workout.exercises.length > 3 && (
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-sm text-zinc-400">
                         • And {workout.exercises.length - 3} more exercises...
                       </div>
                     )}
                   </div>
-                  <Button asChild className="mt-4 w-full" variant={workout.completed ? "outline" : "default"}>
+                  <Button asChild className={`mt-4 w-full ${workout.completed ? 'border-zinc-800 bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white' : 'bg-orange-500 text-white hover:bg-orange-600'}`}>
                     <Link href={`/dashboard/workouts/${workout.id}`}>
                       {workout.completed ? "View Details" : "Start Workout"}
                     </Link>
@@ -92,13 +92,13 @@ export default async function WorkoutsPage() {
             ))}
           </div>
         ) : (
-          <Card>
+          <Card className="border-zinc-800 bg-zinc-900">
             <CardHeader>
-              <CardTitle>No Workouts Yet</CardTitle>
-              <CardDescription>Generate a workout plan to get started</CardDescription>
+              <CardTitle className="text-white">No Workouts Yet</CardTitle>
+              <CardDescription className="text-zinc-400">Generate a workout plan to get started</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button asChild size="lg">
+              <Button asChild size="lg" className="bg-orange-500 text-white hover:bg-orange-600">
                 <Link href="/dashboard/generate-plan">Generate Workout Plan</Link>
               </Button>
             </CardContent>

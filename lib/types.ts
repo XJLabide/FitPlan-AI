@@ -22,7 +22,7 @@ export type EquipmentOption =
 export interface OnboardingData {
   fitness_level: FitnessLevel
   primary_goal: FitnessGoal
-  available_days: number
+  available_days: string[]
   session_duration: number
   equipment_access: EquipmentOption[]
   injuries_limitations?: string

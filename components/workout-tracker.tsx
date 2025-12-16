@@ -162,15 +162,15 @@ export function WorkoutTracker({ workout }: { workout: Workout }) {
   return (
     <div className="space-y-6">
       {/* Workout Header */}
-      <Card>
+      <Card className="border-zinc-800 bg-zinc-900">
         <CardHeader>
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500 text-lg font-bold text-white">
               {workout.day_number}
             </div>
             <div>
-              <CardTitle>{workout.workout_name}</CardTitle>
-              <CardDescription>{workout.exercises.length} exercises to complete</CardDescription>
+              <CardTitle className="text-white">{workout.workout_name}</CardTitle>
+              <CardDescription className="text-zinc-400">{workout.exercises.length} exercises to complete</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -178,7 +178,7 @@ export function WorkoutTracker({ workout }: { workout: Workout }) {
 
       {/* Exercises */}
       {workout.exercises.map((exercise, idx) => (
-        <Card key={exercise.id}>
+        <Card key={exercise.id} className="border-zinc-800 bg-zinc-900">
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex-1">
@@ -190,19 +190,19 @@ export function WorkoutTracker({ workout }: { workout: Workout }) {
                       setExerciseCompleted((prev) => ({ ...prev, [exercise.id]: checked as boolean }))
                     }
                   />
-                  <Label htmlFor={`completed-${exercise.id}`} className="cursor-pointer text-lg font-semibold">
+                  <Label htmlFor={`completed-${exercise.id}`} className="cursor-pointer text-lg font-semibold text-white">
                     {idx + 1}. {exercise.exercise_name}
                   </Label>
                 </div>
-                {exercise.notes && <p className="ml-9 mt-2 text-sm text-muted-foreground">{exercise.notes}</p>}
+                {exercise.notes && <p className="ml-9 mt-2 text-sm text-zinc-400">{exercise.notes}</p>}
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Planned Details */}
-            <div className="rounded-lg bg-muted/50 p-4">
-              <h4 className="mb-2 text-sm font-semibold">Planned</h4>
-              <div className="flex flex-wrap gap-4 text-sm">
+            <div className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-4">
+              <h4 className="mb-2 text-sm font-semibold text-zinc-400">Planned</h4>
+              <div className="flex flex-wrap gap-4 text-sm text-zinc-300">
                 {exercise.sets && <span>Sets: {exercise.sets}</span>}
                 {exercise.reps && <span>Reps: {exercise.reps}</span>}
                 {exercise.duration_minutes && <span>Duration: {exercise.duration_minutes} min</span>}
@@ -213,11 +213,11 @@ export function WorkoutTracker({ workout }: { workout: Workout }) {
             {/* Actual Performance */}
             {exerciseCompleted[exercise.id] && (
               <div className="space-y-3">
-                <h4 className="text-sm font-semibold">Log Your Performance</h4>
+                <h4 className="text-sm font-semibold text-white">Log Your Performance</h4>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {exercise.sets && (
                     <div className="space-y-2">
-                      <Label htmlFor={`sets-${exercise.id}`} className="text-sm">
+                      <Label htmlFor={`sets-${exercise.id}`} className="text-sm text-zinc-300">
                         Sets Completed
                       </Label>
                       <Input
@@ -227,12 +227,13 @@ export function WorkoutTracker({ workout }: { workout: Workout }) {
                         onChange={(e) =>
                           updateExerciseLog(exercise.id, "sets_completed", Number.parseInt(e.target.value))
                         }
+                        className="border-zinc-800 bg-zinc-800 text-white"
                       />
                     </div>
                   )}
                   {exercise.reps && (
                     <div className="space-y-2">
-                      <Label htmlFor={`reps-${exercise.id}`} className="text-sm">
+                      <Label htmlFor={`reps-${exercise.id}`} className="text-sm text-zinc-300">
                         Reps Completed
                       </Label>
                       <Input
@@ -240,11 +241,12 @@ export function WorkoutTracker({ workout }: { workout: Workout }) {
                         type="text"
                         value={exerciseLogs[exercise.id]?.reps_completed || ""}
                         onChange={(e) => updateExerciseLog(exercise.id, "reps_completed", e.target.value)}
+                        className="border-zinc-800 bg-zinc-800 text-white"
                       />
                     </div>
                   )}
                   <div className="space-y-2">
-                    <Label htmlFor={`weight-${exercise.id}`} className="text-sm">
+                    <Label htmlFor={`weight-${exercise.id}`} className="text-sm text-zinc-300">
                       Weight Used (kg)
                     </Label>
                     <Input
@@ -253,11 +255,12 @@ export function WorkoutTracker({ workout }: { workout: Workout }) {
                       step="0.5"
                       value={exerciseLogs[exercise.id]?.weight_used || ""}
                       onChange={(e) => updateExerciseLog(exercise.id, "weight_used", Number.parseFloat(e.target.value))}
+                      className="border-zinc-800 bg-zinc-800 text-white"
                     />
                   </div>
                   {exercise.duration_minutes && (
                     <div className="space-y-2">
-                      <Label htmlFor={`duration-${exercise.id}`} className="text-sm">
+                      <Label htmlFor={`duration-${exercise.id}`} className="text-sm text-zinc-300">
                         Duration (min)
                       </Label>
                       <Input
@@ -267,12 +270,13 @@ export function WorkoutTracker({ workout }: { workout: Workout }) {
                         onChange={(e) =>
                           updateExerciseLog(exercise.id, "duration_minutes", Number.parseInt(e.target.value))
                         }
+                        className="border-zinc-800 bg-zinc-800 text-white"
                       />
                     </div>
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor={`notes-${exercise.id}`} className="text-sm">
+                  <Label htmlFor={`notes-${exercise.id}`} className="text-sm text-zinc-300">
                     Exercise Notes (Optional)
                   </Label>
                   <Textarea
@@ -281,6 +285,7 @@ export function WorkoutTracker({ workout }: { workout: Workout }) {
                     value={exerciseLogs[exercise.id]?.notes || ""}
                     onChange={(e) => updateExerciseLog(exercise.id, "notes", e.target.value)}
                     rows={2}
+                    className="border-zinc-800 bg-zinc-800 text-white placeholder:text-zinc-600"
                   />
                 </div>
               </div>
@@ -290,39 +295,39 @@ export function WorkoutTracker({ workout }: { workout: Workout }) {
       ))}
 
       {/* Session Summary */}
-      <Card>
+      <Card className="border-zinc-800 bg-zinc-900">
         <CardHeader>
-          <CardTitle>Workout Summary</CardTitle>
-          <CardDescription>How did the overall workout feel?</CardDescription>
+          <CardTitle className="text-white">Workout Summary</CardTitle>
+          <CardDescription className="text-zinc-400">How did the overall workout feel?</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-3">
-            <Label>Overall Difficulty</Label>
+            <Label className="text-zinc-300">Overall Difficulty</Label>
             <RadioGroup
               value={sessionFeeling}
               onValueChange={(value) => setSessionFeeling(value as typeof sessionFeeling)}
             >
-              <div className="flex items-center space-x-3 rounded-lg border p-3">
+              <div className="flex items-center space-x-3 rounded-lg border border-zinc-800 bg-zinc-950/50 p-3">
                 <RadioGroupItem value="easy" id="easy" />
-                <Label htmlFor="easy" className="flex-1 cursor-pointer">
+                <Label htmlFor="easy" className="flex-1 cursor-pointer text-white">
                   Easy
                 </Label>
               </div>
-              <div className="flex items-center space-x-3 rounded-lg border p-3">
+              <div className="flex items-center space-x-3 rounded-lg border border-zinc-800 bg-zinc-950/50 p-3">
                 <RadioGroupItem value="moderate" id="moderate" />
-                <Label htmlFor="moderate" className="flex-1 cursor-pointer">
+                <Label htmlFor="moderate" className="flex-1 cursor-pointer text-white">
                   Moderate
                 </Label>
               </div>
-              <div className="flex items-center space-x-3 rounded-lg border p-3">
+              <div className="flex items-center space-x-3 rounded-lg border border-zinc-800 bg-zinc-950/50 p-3">
                 <RadioGroupItem value="hard" id="hard" />
-                <Label htmlFor="hard" className="flex-1 cursor-pointer">
+                <Label htmlFor="hard" className="flex-1 cursor-pointer text-white">
                   Hard
                 </Label>
               </div>
-              <div className="flex items-center space-x-3 rounded-lg border p-3">
+              <div className="flex items-center space-x-3 rounded-lg border border-zinc-800 bg-zinc-950/50 p-3">
                 <RadioGroupItem value="very_hard" id="very_hard" />
-                <Label htmlFor="very_hard" className="flex-1 cursor-pointer">
+                <Label htmlFor="very_hard" className="flex-1 cursor-pointer text-white">
                   Very Hard
                 </Label>
               </div>
@@ -330,24 +335,25 @@ export function WorkoutTracker({ workout }: { workout: Workout }) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="session-notes">Session Notes (Optional)</Label>
+            <Label htmlFor="session-notes" className="text-zinc-300">Session Notes (Optional)</Label>
             <Textarea
               id="session-notes"
               placeholder="How did you feel during the workout? Any achievements or challenges?"
               value={sessionNotes}
               onChange={(e) => setSessionNotes(e.target.value)}
               rows={3}
+              className="border-zinc-800 bg-zinc-800 text-white placeholder:text-zinc-600"
             />
           </div>
 
           {error && <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
 
-          <Button onClick={handleCompleteWorkout} disabled={!allCompleted || isSaving} size="lg" className="w-full">
+          <Button onClick={handleCompleteWorkout} disabled={!allCompleted || isSaving} size="lg" className="w-full bg-orange-500 text-white hover:bg-orange-600">
             {isSaving ? "Saving..." : allCompleted ? "Complete Workout" : "Mark All Exercises as Complete"}
           </Button>
 
           {!allCompleted && (
-            <p className="text-center text-sm text-muted-foreground">
+            <p className="text-center text-sm text-zinc-500">
               Check off all exercises to complete this workout
             </p>
           )}

@@ -35,58 +35,58 @@ export default async function ProgressPage() {
   const avgFeeling =
     sessions && sessions.length > 0
       ? sessions
-          .filter((s) => s.overall_feeling)
-          .map((s) => s.overall_feeling)
-          .join(", ")
+        .filter((s) => s.overall_feeling)
+        .map((s) => s.overall_feeling)
+        .join(", ")
       : "N/A"
 
   return (
-    <div className="min-h-screen bg-muted/50">
+    <div className="min-h-screen bg-zinc-950">
       <DashboardNav />
       <div className="mx-auto max-w-7xl space-y-6 p-6">
         <div>
-          <h1 className="text-3xl font-bold">Your Progress</h1>
-          <p className="text-muted-foreground">Track your workout history and performance improvements</p>
+          <h1 className="text-3xl font-bold text-white">Your Progress</h1>
+          <p className="text-zinc-400">Track your workout history and performance improvements</p>
         </div>
 
         {/* Stats */}
         <div className="grid gap-4 md:grid-cols-3">
-          <Card>
+          <Card className="border-zinc-800 bg-zinc-900">
             <CardHeader className="pb-3">
-              <CardDescription>Total Sessions</CardDescription>
-              <CardTitle className="text-4xl">{totalSessions}</CardTitle>
+              <CardDescription className="text-zinc-400">Total Sessions</CardDescription>
+              <CardTitle className="text-4xl text-white">{totalSessions}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">Completed workouts</p>
+              <p className="text-sm text-zinc-400">Completed workouts</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-zinc-800 bg-zinc-900">
             <CardHeader className="pb-3">
-              <CardDescription>Total Exercises</CardDescription>
-              <CardTitle className="text-4xl">{exerciseLogs?.length || 0}</CardTitle>
+              <CardDescription className="text-zinc-400">Total Exercises</CardDescription>
+              <CardTitle className="text-4xl text-white">{exerciseLogs?.length || 0}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">Exercises logged</p>
+              <p className="text-sm text-zinc-400">Exercises logged</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-zinc-800 bg-zinc-900">
             <CardHeader className="pb-3">
-              <CardDescription>Recent Feeling</CardDescription>
-              <CardTitle className="text-2xl capitalize">{sessions?.[0]?.overall_feeling || "N/A"}</CardTitle>
+              <CardDescription className="text-zinc-400">Recent Feeling</CardDescription>
+              <CardTitle className="text-2xl capitalize text-white">{sessions?.[0]?.overall_feeling || "N/A"}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">Last workout difficulty</p>
+              <p className="text-sm text-zinc-400">Last workout difficulty</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Recent Sessions */}
-        <Card>
+        <Card className="border-zinc-800 bg-zinc-900">
           <CardHeader>
-            <CardTitle>Recent Workout Sessions</CardTitle>
-            <CardDescription>Your workout history and performance</CardDescription>
+            <CardTitle className="text-white">Recent Workout Sessions</CardTitle>
+            <CardDescription className="text-zinc-400">Your workout history and performance</CardDescription>
           </CardHeader>
           <CardContent>
             {sessions && sessions.length > 0 ? (

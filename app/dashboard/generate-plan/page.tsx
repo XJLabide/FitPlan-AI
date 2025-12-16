@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useEffect, useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,6 +11,8 @@ import type { OnboardingData } from "@/lib/types"
 
 export default function GeneratePlanPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const hasAutoStarted = useRef(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [generatedPlan, setGeneratedPlan] = useState<GeneratedWorkoutPlan | null>(null)
@@ -51,6 +53,14 @@ export default function GeneratePlanPage() {
     }
   }
 
+  useEffect(() => {
+    const auto = searchParams.get("auto")
+    if (auto === "true" && !hasAutoStarted.current && !generatedPlan) {
+      hasAutoStarted.current = true
+      handleGenerate()
+    }
+  }, [searchParams, generatedPlan])
+
   const handleSavePlan = async () => {
     if (!generatedPlan) return
 
@@ -66,6 +76,19 @@ export default function GeneratePlanPage() {
       if (!user) {
         throw new Error("Not authenticated")
       }
+
+      // Fetch onboarding data to get available days
+      const { data: onboardingData, error: fetchError } = await supabase
+        .from("onboarding_data")
+        .select("available_days")
+        .eq("user_id", user.id)
+        .single()
+
+      if (fetchError || !onboardingData) {
+        throw new Error("Could not fetch profile settings")
+      }
+
+      const availableDays = (onboardingData.available_days as unknown as string[]) || []
 
       // Create workout plan
       console.log("Saving plan...", { userId: user.id, planName: generatedPlan.plan_name })
@@ -87,9 +110,46 @@ export default function GeneratePlanPage() {
       }
       console.log("Plan saved:", planData)
 
+      // Map days to integers for calculation
+      const dayMap: { [key: string]: number } = {
+        Sunday: 0,
+        Monday: 1,
+        Tuesday: 2,
+        Wednesday: 3,
+        Thursday: 4,
+        Friday: 5,
+        Saturday: 6,
+      }
+
       // Create workouts for each day
       for (const workout of generatedPlan.workouts) {
-        console.log("Saving workout...", workout.day_number)
+        // Calculate scheduled date
+        let scheduledDate = null
+        if (availableDays.length > 0) {
+          // Assuming AI generates workouts in order corresponding to proper available days
+          // workout.day_number is 1-indexed
+          const dayIndex = (workout.day_number - 1) % availableDays.length
+          const dayName = availableDays[dayIndex]
+
+          if (dayName && dayMap[dayName] !== undefined) {
+            const targetDay = dayMap[dayName]
+            const today = new Date()
+            const currentDay = today.getDay()
+
+            // Calculate days until target day
+            let daysUntil = targetDay - currentDay
+            // If the day is today, schedule for today. If it's past, schedule for next week.
+            if (daysUntil < 0) {
+              daysUntil += 7
+            }
+
+            const date = new Date(today)
+            date.setDate(today.getDate() + daysUntil)
+            scheduledDate = date.toISOString().split('T')[0]
+          }
+        }
+
+        console.log("Saving workout...", { day: workout.day_number, date: scheduledDate })
         const { data: workoutData, error: workoutError } = await supabase
           .from("workouts")
           .insert({
@@ -97,6 +157,7 @@ export default function GeneratePlanPage() {
             user_id: user.id,
             day_number: workout.day_number,
             workout_name: workout.workout_name,
+            scheduled_date: scheduledDate
           })
           .select()
           .single()
@@ -112,7 +173,6 @@ export default function GeneratePlanPage() {
           user_id: user.id,
           ...exercise,
         }))
-        console.log("Saving exercises for workout...", exercisesToInsert.length)
 
         const { error: exercisesError } = await supabase.from("exercises").insert(exercisesToInsert)
 
@@ -125,20 +185,14 @@ export default function GeneratePlanPage() {
       // Redirect to dashboard
       router.push("/dashboard")
       router.refresh()
-      router.push("/dashboard")
-      router.refresh()
-      router.push("/dashboard")
-      router.refresh()
     } catch (err: any) {
       console.error("Save plan error object:", err)
-      console.error("Save plan error JSON:", JSON.stringify(err, null, 2))
 
       let errorMessage = "Failed to save workout plan."
       if (err instanceof Error) {
         errorMessage = err.message
       } else if (typeof err === "object" && err !== null) {
-        // Handle Supabase/PostgREST errors
-        errorMessage = err.message || err.error_description || err.details || JSON.stringify(err)
+        errorMessage = err.message || err.details || JSON.stringify(err)
       }
 
       setError(errorMessage)
@@ -148,18 +202,18 @@ export default function GeneratePlanPage() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/50 p-6">
+    <div className="min-h-screen bg-zinc-950 p-6">
       <div className="mx-auto max-w-4xl space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Generate Your Workout Plan</h1>
-          <p className="text-muted-foreground">Let AI create a personalized workout plan based on your profile</p>
+          <h1 className="text-3xl font-bold text-white">Generate Your Workout Plan</h1>
+          <p className="text-zinc-400">Let AI create a personalized workout plan based on your profile</p>
         </div>
 
         {!generatedPlan ? (
-          <Card>
+          <Card className="border-zinc-800 bg-zinc-900">
             <CardHeader>
-              <CardTitle>Ready to Get Started?</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-white">Ready to Get Started?</CardTitle>
+              <CardDescription className="text-zinc-400">
                 Click below to generate a personalized workout plan tailored to your fitness level, goals, and available
                 equipment.
               </CardDescription>
@@ -173,18 +227,18 @@ export default function GeneratePlanPage() {
           </Card>
         ) : (
           <div className="space-y-6">
-            <Card>
+            <Card className="border-zinc-800 bg-zinc-900">
               <CardHeader>
-                <CardTitle>{generatedPlan.plan_name}</CardTitle>
-                <CardDescription>{generatedPlan.description}</CardDescription>
+                <CardTitle className="text-white">{generatedPlan.plan_name}</CardTitle>
+                <CardDescription className="text-zinc-400">{generatedPlan.description}</CardDescription>
               </CardHeader>
             </Card>
 
             {generatedPlan.workouts.map((workout) => (
-              <Card key={workout.day_number}>
+              <Card key={workout.day_number} className="border-zinc-800 bg-zinc-900">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+                  <CardTitle className="flex items-center gap-2 text-white">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 text-sm font-semibold text-white">
                       {workout.day_number}
                     </span>
                     {workout.workout_name}
@@ -193,9 +247,9 @@ export default function GeneratePlanPage() {
                 <CardContent>
                   <div className="space-y-4">
                     {workout.exercises.map((exercise, idx) => (
-                      <div key={idx} className="rounded-lg border bg-card p-4">
-                        <h4 className="font-semibold">{exercise.exercise_name}</h4>
-                        <div className="mt-2 flex flex-wrap gap-4 text-sm text-muted-foreground">
+                      <div key={idx} className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-4">
+                        <h4 className="font-semibold text-white">{exercise.exercise_name}</h4>
+                        <div className="mt-2 flex flex-wrap gap-4 text-sm text-zinc-400">
                           {exercise.sets && <span>Sets: {exercise.sets}</span>}
                           {exercise.reps && <span>Reps: {exercise.reps}</span>}
                           {exercise.duration_minutes && <span>Duration: {exercise.duration_minutes} min</span>}
@@ -210,10 +264,10 @@ export default function GeneratePlanPage() {
             ))}
 
             <div className="flex gap-3">
-              <Button onClick={() => setGeneratedPlan(null)} variant="outline" className="flex-1">
+              <Button onClick={() => setGeneratedPlan(null)} variant="outline" className="flex-1 border-zinc-800 bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white">
                 Generate New Plan
               </Button>
-              <Button onClick={handleSavePlan} disabled={isSaving} className="flex-1">
+              <Button onClick={handleSavePlan} disabled={isSaving} className="flex-1 bg-orange-500 text-white hover:bg-orange-600">
                 {isSaving ? "Saving..." : "Save & Start Plan"}
               </Button>
             </div>

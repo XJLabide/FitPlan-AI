@@ -33,7 +33,7 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
   )
 
   return (
-    <div className="min-h-screen bg-muted/50">
+    <div className="min-h-screen bg-zinc-950">
       <DashboardNav />
       <div className="mx-auto max-w-4xl space-y-6 p-6">
         <WorkoutTracker workout={{ ...workout, exercises: sortedExercises }} />

@@ -63,18 +63,18 @@ export default function CreateMealPlanPage() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/50">
+    <div className="min-h-screen bg-zinc-950">
       <DashboardNav />
       <div className="mx-auto max-w-2xl space-y-6 p-6">
         <div>
-          <h1 className="text-3xl font-bold">Create Meal Plan</h1>
-          <p className="text-muted-foreground">Set your daily nutrition targets</p>
+          <h1 className="text-3xl font-bold text-white">Create Meal Plan</h1>
+          <p className="text-zinc-400">Set your daily nutrition targets</p>
         </div>
 
-        <Card>
+        <Card className="border-zinc-800 bg-zinc-900">
           <CardHeader>
-            <CardTitle>Nutrition Goals</CardTitle>
-            <CardDescription>Define your daily macronutrient targets based on your fitness goals</CardDescription>
+            <CardTitle className="text-white">Nutrition Goals</CardTitle>
+            <CardDescription className="text-zinc-400">Define your daily macronutrient targets based on your fitness goals</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -148,7 +148,7 @@ export default function CreateMealPlanPage() {
 
               {error && <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
 
-              <Button type="submit" disabled={isLoading} size="lg" className="w-full">
+              <Button type="submit" disabled={isLoading} size="lg" className="w-full bg-orange-500 text-white hover:bg-orange-600">
                 {isLoading ? "Creating Plan..." : "Create Plan"}
               </Button>
             </form>

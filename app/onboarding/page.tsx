@@ -21,7 +21,7 @@ export default function OnboardingPage() {
   const [formData, setFormData] = useState<OnboardingData>({
     fitness_level: "beginner",
     primary_goal: "general_fitness",
-    available_days: 3,
+    available_days: [],
     session_duration: 45,
     equipment_access: [],
     injuries_limitations: "",
@@ -68,17 +68,19 @@ export default function OnboardingPage() {
         throw new Error("Not authenticated")
       }
 
-      const { error: insertError } = await supabase.from("onboarding_data").insert({
+      // Use upsert to handle updates if data already exists
+      const { error: insertError } = await supabase.from("onboarding_data").upsert({
         user_id: user.id,
         ...formData,
       })
 
       if (insertError) throw insertError
 
-      router.push("/dashboard")
+      router.push("/dashboard/generate-plan?auto=true")
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save onboarding data")
+      console.error("Onboarding error FULL:", JSON.stringify(err, null, 2))
+      setError(err instanceof Error ? err.message : "Failed to save data. See console for 'Onboarding error FULL'.")
     } finally {
       setIsLoading(false)
     }
@@ -97,13 +99,12 @@ export default function OnboardingPage() {
               {[1, 2, 3, 4].map((s) => (
                 <div key={s} className="flex items-center gap-2">
                   <div
-                    className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${
-                      s < step
-                        ? "bg-orange-500 text-white"
-                        : s === step
-                          ? "border-2 border-orange-500 bg-orange-500 text-white"
-                          : "border-2 border-zinc-800 bg-zinc-800 text-zinc-500"
-                    }`}
+                    className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${s < step
+                      ? "bg-orange-500 text-white"
+                      : s === step
+                        ? "border-2 border-orange-500 bg-orange-500 text-white"
+                        : "border-2 border-zinc-800 bg-zinc-800 text-zinc-500"
+                      }`}
                   >
                     {s < step ? <Check className="h-4 w-4" /> : s}
                   </div>
@@ -123,11 +124,10 @@ export default function OnboardingPage() {
                     onValueChange={(value) => setFormData({ ...formData, fitness_level: value as FitnessLevel })}
                   >
                     <div
-                      className={`flex items-start space-x-3 rounded-xl border p-4 transition-all ${
-                        formData.fitness_level === "beginner"
-                          ? "border-orange-500 bg-zinc-800"
-                          : "border-zinc-800 bg-zinc-900 hover:border-zinc-700"
-                      }`}
+                      className={`flex items-start space-x-3 rounded-xl border p-4 transition-all ${formData.fitness_level === "beginner"
+                        ? "border-orange-500 bg-zinc-800"
+                        : "border-zinc-800 bg-zinc-900 hover:border-zinc-700"
+                        }`}
                     >
                       <RadioGroupItem value="beginner" id="beginner" className="mt-1" />
                       <div className="flex-1">
@@ -140,11 +140,10 @@ export default function OnboardingPage() {
                       </div>
                     </div>
                     <div
-                      className={`flex items-start space-x-3 rounded-xl border p-4 transition-all ${
-                        formData.fitness_level === "intermediate"
-                          ? "border-orange-500 bg-zinc-800"
-                          : "border-zinc-800 bg-zinc-900 hover:border-zinc-700"
-                      }`}
+                      className={`flex items-start space-x-3 rounded-xl border p-4 transition-all ${formData.fitness_level === "intermediate"
+                        ? "border-orange-500 bg-zinc-800"
+                        : "border-zinc-800 bg-zinc-900 hover:border-zinc-700"
+                        }`}
                     >
                       <RadioGroupItem value="intermediate" id="intermediate" className="mt-1" />
                       <div className="flex-1">
@@ -157,11 +156,10 @@ export default function OnboardingPage() {
                       </div>
                     </div>
                     <div
-                      className={`flex items-start space-x-3 rounded-xl border p-4 transition-all ${
-                        formData.fitness_level === "advanced"
-                          ? "border-orange-500 bg-zinc-800"
-                          : "border-zinc-800 bg-zinc-900 hover:border-zinc-700"
-                      }`}
+                      className={`flex items-start space-x-3 rounded-xl border p-4 transition-all ${formData.fitness_level === "advanced"
+                        ? "border-orange-500 bg-zinc-800"
+                        : "border-zinc-800 bg-zinc-900 hover:border-zinc-700"
+                        }`}
                     >
                       <RadioGroupItem value="advanced" id="advanced" className="mt-1" />
                       <div className="flex-1">
@@ -199,11 +197,10 @@ export default function OnboardingPage() {
                     ].map((goal) => (
                       <div
                         key={goal.value}
-                        className={`flex items-center space-x-3 rounded-xl border p-4 transition-all ${
-                          formData.primary_goal === goal.value
-                            ? "border-orange-500 bg-zinc-800"
-                            : "border-zinc-800 bg-zinc-900 hover:border-zinc-700"
-                        }`}
+                        className={`flex items-center space-x-3 rounded-xl border p-4 transition-all ${formData.primary_goal === goal.value
+                          ? "border-orange-500 bg-zinc-800"
+                          : "border-zinc-800 bg-zinc-900 hover:border-zinc-700"
+                          }`}
                       >
                         <RadioGroupItem value={goal.value} id={goal.value} />
                         <Label htmlFor={goal.value} className="flex-1 cursor-pointer font-medium text-white">
@@ -232,27 +229,30 @@ export default function OnboardingPage() {
             {step === 3 && (
               <div className="space-y-6">
                 <div className="space-y-3">
-                  <Label className="text-lg font-semibold text-white">How many days per week can you work out?</Label>
-                  <RadioGroup
-                    value={formData.available_days.toString()}
-                    onValueChange={(value) => setFormData({ ...formData, available_days: Number.parseInt(value) })}
-                  >
-                    {[3, 4, 5, 6, 7].map((days) => (
+                  <Label className="text-lg font-semibold text-white">Which days can you work out?</Label>
+                  <p className="text-sm text-zinc-400">Select the days you are available</p>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
                       <div
-                        key={days}
-                        className={`flex items-center space-x-3 rounded-xl border p-4 transition-all ${
-                          formData.available_days === days
-                            ? "border-orange-500 bg-zinc-800"
-                            : "border-zinc-800 bg-zinc-900 hover:border-zinc-700"
-                        }`}
+                        key={day}
+                        className={`flex cursor-pointer items-center justify-center rounded-xl border p-3 text-center transition-all ${formData.available_days.includes(day)
+                          ? "border-orange-500 bg-orange-500/10 text-orange-500"
+                          : "border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-zinc-700"
+                          }`}
+                        onClick={() => {
+                          const days = formData.available_days.includes(day)
+                            ? formData.available_days.filter((d) => d !== day)
+                            : [...formData.available_days, day]
+                          setFormData({ ...formData, available_days: days })
+                        }}
                       >
-                        <RadioGroupItem value={days.toString()} id={`days-${days}`} />
-                        <Label htmlFor={`days-${days}`} className="flex-1 cursor-pointer font-medium text-white">
-                          {days} days per week
-                        </Label>
+                        <span className="font-medium">{day.substring(0, 3)}</span>
                       </div>
                     ))}
-                  </RadioGroup>
+                  </div>
+                  {formData.available_days.length === 0 && (
+                    <p className="text-xs text-destructive">Please select at least one day</p>
+                  )}
                 </div>
 
                 <div className="space-y-3">
@@ -264,11 +264,10 @@ export default function OnboardingPage() {
                     {[30, 45, 60, 90].map((duration) => (
                       <div
                         key={duration}
-                        className={`flex items-center space-x-3 rounded-xl border p-4 transition-all ${
-                          formData.session_duration === duration
-                            ? "border-orange-500 bg-zinc-800"
-                            : "border-zinc-800 bg-zinc-900 hover:border-zinc-700"
-                        }`}
+                        className={`flex items-center space-x-3 rounded-xl border p-4 transition-all ${formData.session_duration === duration
+                          ? "border-orange-500 bg-zinc-800"
+                          : "border-zinc-800 bg-zinc-900 hover:border-zinc-700"
+                          }`}
                       >
                         <RadioGroupItem value={duration.toString()} id={`duration-${duration}`} />
                         <Label
@@ -307,11 +306,10 @@ export default function OnboardingPage() {
                     {equipmentOptions.map((equipment) => (
                       <div
                         key={equipment.value}
-                        className={`flex items-center space-x-3 rounded-xl border p-4 transition-all ${
-                          formData.equipment_access.includes(equipment.value)
-                            ? "border-orange-500 bg-zinc-800"
-                            : "border-zinc-800 bg-zinc-900 hover:border-zinc-700"
-                        }`}
+                        className={`flex items-center space-x-3 rounded-xl border p-4 transition-all ${formData.equipment_access.includes(equipment.value)
+                          ? "border-orange-500 bg-zinc-800"
+                          : "border-zinc-800 bg-zinc-900 hover:border-zinc-700"
+                          }`}
                       >
                         <Checkbox
                           id={equipment.value}

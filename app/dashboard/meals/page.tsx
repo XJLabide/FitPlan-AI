@@ -46,13 +46,13 @@ export default async function MealsPage() {
   )
 
   return (
-    <div className="min-h-screen bg-muted/50">
+    <div className="min-h-screen bg-zinc-950">
       <DashboardNav />
       <div className="mx-auto max-w-7xl space-y-6 p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Meal Planning</h1>
-            <p className="text-muted-foreground">Track your nutrition and plan your meals</p>
+            <h1 className="text-3xl font-bold text-white">Meal Planning</h1>
+            <p className="text-zinc-400">Track your nutrition and plan your meals</p>
           </div>
           <AddMealDialog />
         </div>
@@ -61,10 +61,10 @@ export default async function MealsPage() {
           <>
             {/* Nutrition Goals */}
             <div className="grid gap-4 md:grid-cols-4">
-              <Card>
+              <Card className="border-zinc-800 bg-zinc-900">
                 <CardHeader className="pb-3">
-                  <CardDescription>Calories</CardDescription>
-                  <CardTitle className="text-3xl">
+                  <CardDescription className="text-zinc-400">Calories</CardDescription>
+                  <CardTitle className="text-3xl text-white">
                     {todayTotals?.calories || 0}
                     <span className="text-lg font-normal text-muted-foreground">
                       {" "}
@@ -84,10 +84,10 @@ export default async function MealsPage() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-zinc-800 bg-zinc-900">
                 <CardHeader className="pb-3">
-                  <CardDescription>Protein</CardDescription>
-                  <CardTitle className="text-3xl">
+                  <CardDescription className="text-zinc-400">Protein</CardDescription>
+                  <CardTitle className="text-3xl text-white">
                     {todayTotals?.protein || 0}g
                     <span className="text-lg font-normal text-muted-foreground"> / {activePlan.protein_target_g}g</span>
                   </CardTitle>
@@ -104,10 +104,10 @@ export default async function MealsPage() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-zinc-800 bg-zinc-900">
                 <CardHeader className="pb-3">
-                  <CardDescription>Carbs</CardDescription>
-                  <CardTitle className="text-3xl">
+                  <CardDescription className="text-zinc-400">Carbs</CardDescription>
+                  <CardTitle className="text-3xl text-white">
                     {todayTotals?.carbs || 0}g
                     <span className="text-lg font-normal text-muted-foreground"> / {activePlan.carbs_target_g}g</span>
                   </CardTitle>
@@ -124,10 +124,10 @@ export default async function MealsPage() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-zinc-800 bg-zinc-900">
                 <CardHeader className="pb-3">
-                  <CardDescription>Fat</CardDescription>
-                  <CardTitle className="text-3xl">
+                  <CardDescription className="text-zinc-400">Fat</CardDescription>
+                  <CardTitle className="text-3xl text-white">
                     {todayTotals?.fat || 0}g
                     <span className="text-lg font-normal text-muted-foreground"> / {activePlan.fat_target_g}g</span>
                   </CardTitle>
@@ -145,11 +145,10 @@ export default async function MealsPage() {
               </Card>
             </div>
 
-            {/* Today's Meals */}
-            <Card>
+            <Card className="border-zinc-800 bg-zinc-900">
               <CardHeader>
-                <CardTitle>Today's Meals</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-white">Today's Meals</CardTitle>
+                <CardDescription className="text-zinc-400">
                   {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
                 </CardDescription>
               </CardHeader>
@@ -160,23 +159,23 @@ export default async function MealsPage() {
                       const meals = todayMeals.filter((m) => m.meal_type === mealType)
                       return (
                         <div key={mealType}>
-                          <h4 className="mb-2 text-sm font-semibold capitalize">{mealType}</h4>
+                          <h4 className="mb-2 text-sm font-semibold capitalize text-zinc-400">{mealType}</h4>
                           {meals.length > 0 ? (
                             <div className="space-y-2">
                               {meals.map((meal) => (
                                 <div
                                   key={meal.id}
-                                  className="flex items-center justify-between rounded-lg border bg-card p-3"
+                                  className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950/50 p-3"
                                 >
                                   <div>
-                                    <p className="font-medium">{meal.meal_name}</p>
+                                    <p className="font-medium text-white">{meal.meal_name}</p>
                                     {meal.description && (
-                                      <p className="text-sm text-muted-foreground">{meal.description}</p>
+                                      <p className="text-sm text-zinc-400">{meal.description}</p>
                                     )}
                                   </div>
                                   <div className="text-right text-sm">
-                                    <p className="font-semibold">{meal.calories} cal</p>
-                                    <p className="text-muted-foreground">
+                                    <p className="font-semibold text-orange-500">{meal.calories} cal</p>
+                                    <p className="text-zinc-500">
                                       P: {meal.protein_g}g • C: {meal.carbs_g}g • F: {meal.fat_g}g
                                     </p>
                                   </div>
@@ -184,14 +183,14 @@ export default async function MealsPage() {
                               ))}
                             </div>
                           ) : (
-                            <p className="py-2 text-sm text-muted-foreground">No {mealType} logged yet</p>
+                            <p className="py-2 text-sm text-zinc-500">No {mealType} logged yet</p>
                           )}
                         </div>
                       )
                     })}
                   </div>
                 ) : (
-                  <div className="py-8 text-center text-muted-foreground">
+                  <div className="py-8 text-center text-zinc-500">
                     <p>No meals logged for today. Click the button above to add your first meal!</p>
                   </div>
                 )}
@@ -199,14 +198,14 @@ export default async function MealsPage() {
             </Card>
           </>
         ) : (
-          <Card>
+          <Card className="border-zinc-800 bg-zinc-900">
             <CardHeader>
-              <CardTitle>Create Your Meal Plan</CardTitle>
-              <CardDescription>Set up your nutrition goals to start tracking your meals</CardDescription>
+              <CardTitle className="text-white">Create Your Meal Plan</CardTitle>
+              <CardDescription className="text-zinc-400">Set up your nutrition goals to start tracking your meals</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button asChild size="lg">
-                <Link href="/dashboard/meals/create-plan">Create Meal Plan</Link>
+              <Button asChild size="lg" className="bg-orange-500 text-white hover:bg-orange-600">
+                <Link href="/dashboard/meals/generate-plan">Generate Meal Plan</Link>
               </Button>
             </CardContent>
           </Card>
