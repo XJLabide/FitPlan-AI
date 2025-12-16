@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
-import { useEffect, useRef, useState } from "react"
+import { Suspense, useEffect, useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -31,7 +31,23 @@ interface CurrentPlan {
   }[]
 }
 
+// Wrapper component to handle Suspense boundary for useSearchParams
 export default function GeneratePlanPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
+        <div className="text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-orange-500 border-t-transparent mx-auto" />
+          <p className="mt-4 text-zinc-400">Loading...</p>
+        </div>
+      </div>
+    }>
+      <GeneratePlanContent />
+    </Suspense>
+  )
+}
+
+function GeneratePlanContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const hasAutoStarted = useRef(false)
