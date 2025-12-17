@@ -65,35 +65,51 @@ export function WorkoutCalendar({ workouts }: WorkoutCalendarProps) {
 
   const headerText = `${startMonth} ${startDay} - ${endMonth === startMonth ? "" : endMonth + " "}${endDay}, ${year}`
 
+  const dayNameMap: { [key: string]: number } = {
+    "Sunday": 0, "Monday": 1, "Tuesday": 2, "Wednesday": 3,
+    "Thursday": 4, "Friday": 5, "Saturday": 6
+  }
+
   const getWorkoutsForDate = (date: Date) => {
     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
-    return workouts.filter((w) => w.scheduled_date === dateStr)
+    const dayOfWeek = date.getDay() // 0 = Sunday, 1 = Monday, etc.
+
+    return workouts.filter((w) => {
+      // Match by exact scheduled_date
+      if (w.scheduled_date === dateStr) return true
+
+      // Also match by day of week from workout name (e.g., "Monday - Upper Body" matches all Mondays)
+      const workoutDayName = w.workout_name.split(' - ')[0]
+      if (dayNameMap[workoutDayName] === dayOfWeek) return true
+
+      return false
+    })
   }
 
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
   return (
     <Card className="border-zinc-800 bg-zinc-900">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-white">Weekly Schedule</CardTitle>
+      <CardHeader className="pb-3 md:pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <CardTitle className="text-base md:text-lg text-white">Weekly Schedule</CardTitle>
           <div className="flex items-center gap-2">
             <Button
               onClick={previousWeek}
               variant="outline"
               size="icon"
-              className="border-zinc-800 bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white"
+              className="h-8 w-8 border-zinc-800 bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="min-w-[180px] text-center font-semibold text-white">
+            <span className="min-w-[140px] md:min-w-[180px] text-center text-sm md:text-base font-semibold text-white">
               {headerText}
             </span>
             <Button
               onClick={nextWeek}
               variant="outline"
               size="icon"
-              className="border-zinc-800 bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white"
+              className="h-8 w-8 border-zinc-800 bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -101,7 +117,7 @@ export function WorkoutCalendar({ workouts }: WorkoutCalendarProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-1 md:gap-2">
           {/* Day headers */}
           {dayNames.map((day) => (
             <div key={day} className="p-2 text-center text-sm font-semibold text-zinc-400">
@@ -131,19 +147,25 @@ export function WorkoutCalendar({ workouts }: WorkoutCalendarProps) {
 
                   {/* Workouts list */}
                   <div className="mt-2 flex-1 space-y-1">
-                    {dayWorkouts.map((workout) => (
-                      <Link key={workout.id} href={`/dashboard/workouts/${workout.id}`}>
-                        <div
-                          className={`truncate rounded px-1.5 py-1 text-xs font-medium transition-colors ${workout.completed
+                    {dayWorkouts.map((workout) => {
+                      // Remove day name prefix (e.g., "Wednesday - Lower Body" -> "Lower Body")
+                      const displayName = workout.workout_name.includes(' - ')
+                        ? workout.workout_name.split(' - ').slice(1).join(' - ')
+                        : workout.workout_name
+                      return (
+                        <Link key={workout.id} href={`/dashboard/workouts/${workout.id}`}>
+                          <div
+                            className={`truncate rounded px-1.5 py-1 text-xs font-medium transition-colors ${workout.completed
                               ? "bg-green-500/20 text-green-400 hover:bg-green-500/30"
                               : "bg-orange-500/20 text-orange-400 hover:bg-orange-500/30"
-                            }`}
-                          title={workout.workout_name}
-                        >
-                          {workout.workout_name}
-                        </div>
-                      </Link>
-                    ))}
+                              }`}
+                            title={workout.workout_name}
+                          >
+                            {displayName}
+                          </div>
+                        </Link>
+                      )
+                    })}
                     {dayWorkouts.length === 0 && (
                       <div className="flex flex-1 items-center justify-center">
                         <span className="text-[10px] text-zinc-600">Rest</span>

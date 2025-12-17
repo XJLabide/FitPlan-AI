@@ -237,13 +237,56 @@ function GenerateMealPlanContent() {
                 )}
 
                 {step === "generating" && (
-                    <Card className="border-zinc-800 bg-zinc-900">
-                        <CardContent className="flex flex-col items-center justify-center py-16">
-                            <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-orange-500 border-t-transparent" />
-                            <p className="text-lg font-semibold text-white">Generating Your Meal Plan...</p>
-                            <p className="text-zinc-400">This may take a few seconds</p>
-                        </CardContent>
-                    </Card>
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950">
+                        <div className="relative text-center">
+                            {/* Animated background circles */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="absolute h-64 w-64 animate-ping rounded-full bg-orange-500/10" style={{ animationDuration: '3s' }} />
+                                <div className="absolute h-48 w-48 animate-ping rounded-full bg-orange-500/20" style={{ animationDuration: '2s' }} />
+                                <div className="absolute h-32 w-32 animate-ping rounded-full bg-orange-500/30" style={{ animationDuration: '1s' }} />
+                            </div>
+
+                            {/* Main spinner container */}
+                            <div className="relative mb-8">
+                                {/* Outer rotating ring */}
+                                <div className="h-32 w-32 animate-spin rounded-full border-4 border-zinc-800" style={{ animationDuration: '3s' }}>
+                                    <div className="absolute left-0 top-0 h-4 w-4 -translate-x-1 -translate-y-1 rounded-full bg-orange-500" />
+                                </div>
+
+                                {/* Inner counter-rotating ring */}
+                                <div className="absolute inset-4 animate-spin rounded-full border-4 border-zinc-700" style={{ animationDuration: '2s', animationDirection: 'reverse' }}>
+                                    <div className="absolute right-0 top-1/2 h-3 w-3 translate-x-1 -translate-y-1/2 rounded-full bg-green-500" />
+                                </div>
+
+                                {/* Center icon */}
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-orange-600 shadow-lg shadow-orange-500/30">
+                                        <Sparkles className="h-8 w-8 text-white animate-pulse" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Text content */}
+                            <h2 className="mb-2 text-2xl font-bold text-white">Crafting Your Meal Plan</h2>
+                            <p className="mb-4 text-zinc-400">Our AI is analyzing your preferences...</p>
+
+                            {/* Animated steps */}
+                            <div className="flex flex-col gap-2 text-sm">
+                                <div className="flex items-center justify-center gap-2 text-green-400 animate-pulse">
+                                    <div className="h-2 w-2 rounded-full bg-green-400" />
+                                    Calculating macros...
+                                </div>
+                                <div className="flex items-center justify-center gap-2 text-orange-400 animate-pulse" style={{ animationDelay: '0.5s' }}>
+                                    <div className="h-2 w-2 rounded-full bg-orange-400" />
+                                    Selecting recipes...
+                                </div>
+                                <div className="flex items-center justify-center gap-2 text-zinc-500 animate-pulse" style={{ animationDelay: '1s' }}>
+                                    <div className="h-2 w-2 rounded-full bg-zinc-500" />
+                                    Optimizing nutrition...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 )}
 
                 {step === "preview" && generatedPlan && (

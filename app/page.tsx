@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+  import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
@@ -150,7 +150,7 @@ export default async function Home() {
       {/* Footer */}
       <footer className="border-t border-zinc-800 bg-zinc-900 px-6 py-8">
         <div className="mx-auto max-w-6xl text-center text-zinc-500">
-          <p>© 2024 FitPlan AI. All rights reserved.</p>
+          <p>© 2025 FitPlan AI. All rights reserved.</p>
         </div>
       </footer>
     </div>

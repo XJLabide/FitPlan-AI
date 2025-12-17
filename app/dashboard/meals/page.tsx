@@ -4,7 +4,6 @@ import { DashboardNav } from "@/components/dashboard-nav"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
-import { AddMealDialog } from "@/components/add-meal-dialog"
 
 export default async function MealsPage() {
   const supabase = await createClient()
@@ -48,19 +47,21 @@ export default async function MealsPage() {
   return (
     <div className="min-h-screen bg-zinc-950">
       <DashboardNav />
-      <div className="mx-auto max-w-7xl space-y-6 p-6">
-        <div className="flex items-center justify-between">
+      <div className="mx-auto max-w-7xl space-y-4 md:space-y-6 p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-white">Meal Planning</h1>
-            <p className="text-zinc-400">Track your nutrition and plan your meals</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-white">Meal Planning</h1>
+            <p className="text-sm md:text-base text-zinc-400">Track your nutrition and plan your meals</p>
           </div>
-          <AddMealDialog />
+          <Button asChild variant="outline" className="border-zinc-800 bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white">
+            <Link href="/dashboard/meals/generate-plan">Generate New Plan</Link>
+          </Button>
         </div>
 
         {activePlan ? (
           <>
             {/* Nutrition Goals */}
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-3 md:gap-4 grid-cols-2 md:grid-cols-4">
               <Card className="border-zinc-800 bg-zinc-900">
                 <CardHeader className="pb-3">
                   <CardDescription className="text-zinc-400">Calories</CardDescription>

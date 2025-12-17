@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { generateWorkoutPlan } from "@/lib/ai/workout-generator"
 import type { GeneratedWorkoutPlan } from "@/lib/ai/workout-generator"
 import type { OnboardingData } from "@/lib/types"
-import { ArrowLeft, Plus, Sparkles, Edit } from "lucide-react"
+import { ArrowLeft, Plus, Sparkles, Edit, Trash2, Save, Dumbbell } from "lucide-react"
 import Link from "next/link"
 
 interface CurrentPlan {
@@ -58,6 +58,8 @@ function GeneratePlanContent() {
   const [currentPlan, setCurrentPlan] = useState<CurrentPlan | null>(null)
   const [isLoadingPlan, setIsLoadingPlan] = useState(true)
   const [mode, setMode] = useState<"view" | "generate" | "customize">("view")
+  const [editablePlan, setEditablePlan] = useState<CurrentPlan | null>(null)
+  const [isSavingEdits, setIsSavingEdits] = useState(false)
 
   // Fetch current active plan on load
   useEffect(() => {
@@ -167,6 +169,99 @@ function GeneratePlanContent() {
     }
   }, [searchParams, generatedPlan, isLoadingPlan])
 
+  // Enter customize mode with a copy of the current plan
+  const enterEditMode = () => {
+    if (currentPlan) {
+      // Deep clone the current plan for editing
+      setEditablePlan(JSON.parse(JSON.stringify(currentPlan)))
+      setMode("customize")
+    }
+  }
+
+  // Remove an exercise from the editable plan
+  const removeExercise = (workoutIndex: number, exerciseIndex: number) => {
+    if (!editablePlan) return
+    setEditablePlan(prev => {
+      if (!prev) return prev
+      const updated = { ...prev }
+      updated.workouts = [...updated.workouts]
+      updated.workouts[workoutIndex] = {
+        ...updated.workouts[workoutIndex],
+        exercises: updated.workouts[workoutIndex].exercises.filter((_, idx) => idx !== exerciseIndex)
+      }
+      return updated
+    })
+  }
+
+  // Remove an entire workout from the editable plan
+  const removeWorkout = (workoutIndex: number) => {
+    if (!editablePlan) return
+    setEditablePlan(prev => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        workouts: prev.workouts.filter((_, idx) => idx !== workoutIndex)
+      }
+    })
+  }
+
+  // Save edits to the database
+  const handleSaveEdits = async () => {
+    if (!editablePlan) return
+    setIsSavingEdits(true)
+    setError(null)
+
+    try {
+      const supabase = createClient()
+
+      // Delete exercises that were removed
+      const originalExerciseIds = currentPlan?.workouts.flatMap(w => w.exercises.map(e => e.id)) || []
+      const remainingExerciseIds = editablePlan.workouts.flatMap(w => w.exercises.map(e => e.id))
+      const deletedExerciseIds = originalExerciseIds.filter(id => !remainingExerciseIds.includes(id))
+
+      if (deletedExerciseIds.length > 0) {
+        const { error: deleteError } = await supabase
+          .from("exercises")
+          .delete()
+          .in("id", deletedExerciseIds)
+
+        if (deleteError) throw deleteError
+      }
+
+      // Delete workouts that were removed
+      const originalWorkoutIds = currentPlan?.workouts.map(w => w.id) || []
+      const remainingWorkoutIds = editablePlan.workouts.map(w => w.id)
+      const deletedWorkoutIds = originalWorkoutIds.filter(id => !remainingWorkoutIds.includes(id))
+
+      if (deletedWorkoutIds.length > 0) {
+        // First delete exercises for deleted workouts
+        const { error: deleteExError } = await supabase
+          .from("exercises")
+          .delete()
+          .in("workout_id", deletedWorkoutIds)
+
+        if (deleteExError) throw deleteExError
+
+        // Then delete the workouts
+        const { error: deleteWError } = await supabase
+          .from("workouts")
+          .delete()
+          .in("id", deletedWorkoutIds)
+
+        if (deleteWError) throw deleteWError
+      }
+
+      // Update currentPlan with editablePlan
+      setCurrentPlan(editablePlan)
+      setMode("view")
+      router.refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save changes")
+    } finally {
+      setIsSavingEdits(false)
+    }
+  }
+
   const handleSavePlan = async () => {
     if (!generatedPlan) return
 
@@ -195,6 +290,13 @@ function GeneratePlanContent() {
       }
 
       const availableDays = (onboardingData.available_days as unknown as string[]) || []
+
+      // Deactivate any existing active plans before creating new one
+      await supabase
+        .from("workout_plans")
+        .update({ is_active: false })
+        .eq("user_id", user.id)
+        .eq("is_active", true)
 
       // Create workout plan
       console.log("Saving plan...", { userId: user.id, planName: generatedPlan.plan_name })
@@ -251,7 +353,11 @@ function GeneratePlanContent() {
 
             const date = new Date(today)
             date.setDate(today.getDate() + daysUntil)
-            scheduledDate = date.toISOString().split('T')[0]
+            // Use local date formatting to avoid timezone issues
+            const year = date.getFullYear()
+            const month = String(date.getMonth() + 1).padStart(2, '0')
+            const day = String(date.getDate()).padStart(2, '0')
+            scheduledDate = `${year}-${month}-${day}`
           }
         }
 
@@ -359,9 +465,64 @@ function GeneratePlanContent() {
       </div>
     )
   }
+  // Full-screen loading animation when generating
+  if (isGenerating) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950">
+        <div className="relative text-center">
+          {/* Animated background circles */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute h-64 w-64 animate-ping rounded-full bg-orange-500/10" style={{ animationDuration: '3s' }} />
+            <div className="absolute h-48 w-48 animate-ping rounded-full bg-orange-500/20" style={{ animationDuration: '2s' }} />
+            <div className="absolute h-32 w-32 animate-ping rounded-full bg-orange-500/30" style={{ animationDuration: '1s' }} />
+          </div>
+
+          {/* Main spinner container */}
+          <div className="relative mb-8">
+            {/* Outer rotating ring */}
+            <div className="h-32 w-32 animate-spin rounded-full border-4 border-zinc-800" style={{ animationDuration: '3s' }}>
+              <div className="absolute left-0 top-0 h-4 w-4 -translate-x-1 -translate-y-1 rounded-full bg-orange-500" />
+            </div>
+
+            {/* Inner counter-rotating ring */}
+            <div className="absolute inset-4 animate-spin rounded-full border-4 border-zinc-700" style={{ animationDuration: '2s', animationDirection: 'reverse' }}>
+              <div className="absolute right-0 top-1/2 h-3 w-3 translate-x-1 -translate-y-1/2 rounded-full bg-green-500" />
+            </div>
+
+            {/* Center icon */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-orange-600 shadow-lg shadow-orange-500/30">
+                <Dumbbell className="h-8 w-8 text-white animate-pulse" />
+              </div>
+            </div>
+          </div>
+
+          {/* Text content */}
+          <h2 className="mb-2 text-2xl font-bold text-white">Creating Your Workout Plan</h2>
+          <p className="mb-4 text-zinc-400">Our AI is designing your personalized routine...</p>
+
+          {/* Animated steps */}
+          <div className="flex flex-col gap-2 text-sm">
+            <div className="flex items-center justify-center gap-2 text-green-400 animate-pulse">
+              <div className="h-2 w-2 rounded-full bg-green-400" />
+              Analyzing your goals...
+            </div>
+            <div className="flex items-center justify-center gap-2 text-orange-400 animate-pulse" style={{ animationDelay: '0.5s' }}>
+              <div className="h-2 w-2 rounded-full bg-orange-400" />
+              Selecting exercises...
+            </div>
+            <div className="flex items-center justify-center gap-2 text-zinc-500 animate-pulse" style={{ animationDelay: '1s' }}>
+              <div className="h-2 w-2 rounded-full bg-zinc-500" />
+              Building weekly schedule...
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-zinc-950 p-6">
+    <div className="min-h-screen bg-zinc-950 p-4 md:p-6">
       <div className="mx-auto max-w-4xl space-y-6">
         {/* Back Button */}
         <Link href="/dashboard">
@@ -396,7 +557,7 @@ function GeneratePlanContent() {
                 {isGenerating ? "Generating..." : "Create New Plan"}
               </Button>
               <Button
-                onClick={() => setMode("customize")}
+                onClick={enterEditMode}
                 className="bg-orange-500 text-white hover:bg-orange-600"
               >
                 <Edit className="mr-2 h-4 w-4" />
@@ -414,12 +575,15 @@ function GeneratePlanContent() {
         )}
 
         {/* Mode: Customize Current Plan */}
-        {mode === "customize" && currentPlan && (
+        {mode === "customize" && editablePlan && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <span className="text-lg font-semibold text-white">Customizing: {currentPlan.plan_name}</span>
+              <span className="text-lg font-semibold text-white">Customizing: {editablePlan.plan_name}</span>
               <Button
-                onClick={() => setMode("view")}
+                onClick={() => {
+                  setEditablePlan(null)
+                  setMode("view")
+                }}
                 variant="outline"
                 className="border-zinc-800 bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white"
               >
@@ -430,27 +594,102 @@ function GeneratePlanContent() {
             <Card className="border-orange-500/20 bg-orange-500/10">
               <CardContent className="py-4">
                 <p className="text-sm text-orange-400">
-                  ✨ Customization mode - Edit your workouts directly from the dashboard.
-                  Click on any workout to modify exercises, sets, or reps.
+                  ✨ Click the trash icon to remove exercises or entire workout days. Changes are saved when you click "Save Changes".
                 </p>
               </CardContent>
             </Card>
 
-            {renderPlanDetails(currentPlan, true)}
+            {/* Plan name and description */}
+            <Card className="border-zinc-800 bg-zinc-900">
+              <CardHeader>
+                <CardTitle className="text-white">{editablePlan.plan_name}</CardTitle>
+                <CardDescription className="text-zinc-400">{editablePlan.description}</CardDescription>
+              </CardHeader>
+            </Card>
+
+            {/* Editable workouts */}
+            {editablePlan.workouts.map((workout, workoutIdx) => (
+              <Card key={workout.id || workoutIdx} className="border-zinc-800 bg-zinc-900">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2 text-white">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 text-sm font-semibold text-white">
+                        {workout.day_number}
+                      </span>
+                      {workout.workout_name}
+                    </CardTitle>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeWorkout(workoutIdx)}
+                      className="text-red-400 hover:text-red-300 hover:bg-red-500/20"
+                      title="Remove this workout day"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {workout.exercises.map((exercise, exIdx) => (
+                      <div key={exercise.id || exIdx} className="flex items-start justify-between rounded-lg border border-zinc-800 bg-zinc-950/50 p-4">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-white">{exercise.exercise_name}</h4>
+                          <div className="mt-2 flex flex-wrap gap-4 text-sm text-zinc-400">
+                            {exercise.sets && <span>Sets: {exercise.sets}</span>}
+                            {exercise.reps && <span>Reps: {exercise.reps}</span>}
+                            {exercise.duration_minutes && <span>Duration: {exercise.duration_minutes} min</span>}
+                            {exercise.rest_seconds && <span>Rest: {exercise.rest_seconds}s</span>}
+                          </div>
+                          {exercise.notes && <p className="mt-2 text-sm text-zinc-500">{exercise.notes}</p>}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeExercise(workoutIdx, exIdx)}
+                          className="text-red-400 hover:text-red-300 hover:bg-red-500/20 ml-2"
+                          title="Remove this exercise"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    {workout.exercises.length === 0 && (
+                      <p className="text-center text-sm text-zinc-500 py-4">No exercises remaining. This workout will be removed when saved.</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+
+            {editablePlan.workouts.length === 0 && (
+              <Card className="border-zinc-800 bg-zinc-900">
+                <CardContent className="py-8 text-center">
+                  <p className="text-zinc-500">All workouts removed. Cancel to restore or generate a new plan.</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {error && <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
 
             <div className="flex gap-3">
               <Button
-                onClick={() => setMode("view")}
+                onClick={() => {
+                  setEditablePlan(null)
+                  setMode("view")
+                }}
                 variant="outline"
                 className="flex-1 border-zinc-800 bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white"
               >
-                Done Viewing
+                Cancel
               </Button>
               <Button
-                onClick={() => router.push("/dashboard")}
+                onClick={handleSaveEdits}
+                disabled={isSavingEdits}
                 className="flex-1 bg-orange-500 text-white hover:bg-orange-600"
               >
-                Go to Dashboard
+                <Save className="mr-2 h-4 w-4" />
+                {isSavingEdits ? "Saving..." : "Save Changes"}
               </Button>
             </div>
           </div>

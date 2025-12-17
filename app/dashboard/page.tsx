@@ -28,12 +28,14 @@ export default async function DashboardPage() {
     .limit(1)
     .maybeSingle()
 
-  // Fetch workouts for the active plan
-  const { data: workouts } = await supabase
-    .from("workouts")
-    .select("*, exercises(*)")
-    .eq("user_id", user.id)
-    .order("day_number", { ascending: true })
+  // Fetch workouts for the active plan only
+  const { data: workouts } = activePlan
+    ? await supabase
+      .from("workouts")
+      .select("*, exercises(*)")
+      .eq("plan_id", activePlan.id)
+      .order("day_number", { ascending: true })
+    : { data: [] }
 
   // Fetch recent workout sessions
   const { data: recentSessions } = await supabase
@@ -63,11 +65,11 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-zinc-950">
       <DashboardNav />
-      <div className="mx-auto max-w-7xl space-y-6 p-6">
-        <div className="flex items-center justify-between">
+      <div className="mx-auto max-w-7xl space-y-4 md:space-y-6 p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-white">Welcome Back</h1>
-            <p className="text-zinc-400">Stay consistent with your fitness journey</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-white">Welcome Back</h1>
+            <p className="text-sm md:text-base text-zinc-400">Stay consistent with your fitness journey</p>
           </div>
           <div className="flex gap-3">
             {activePlan ? (
@@ -92,7 +94,7 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
           <Card className="border-zinc-800 bg-zinc-900">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -192,7 +194,7 @@ export default async function DashboardPage() {
                         <Button asChild size="sm" className="h-8 bg-orange-500 text-xs text-white hover:bg-orange-600">
                           <Link href={`/dashboard/workouts/${workout.id}`}>
                             <Play className="mr-1 h-3 w-3" />
-                            Start
+                            {workout.completed ? "Redo" : "Start"}
                           </Link>
                         </Button>
                       </div>
@@ -222,7 +224,7 @@ export default async function DashboardPage() {
           )}
 
           {/* Recent Workout Logs - Always Visible */}
-          <Card className="border-zinc-800 bg-zinc-900 h-fit">
+          <Card className="border-zinc-800 bg-zinc-900 h-full flex flex-col">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -242,7 +244,7 @@ export default async function DashboardPage() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1">
               {recentSessions && recentSessions.length > 0 ? (
                 <div className="space-y-3">
                   {recentSessions.map((session) => (
