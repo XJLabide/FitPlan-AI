@@ -379,11 +379,17 @@ function GeneratePlanContent() {
           throw workoutError
         }
 
-        // Create exercises for this workout
+        // Create exercises for this workout - sanitize numeric values
         const exercisesToInsert = workout.exercises.map((exercise) => ({
           workout_id: workoutData.id,
           user_id: user.id,
-          ...exercise,
+          exercise_name: exercise.exercise_name,
+          sets: exercise.sets ? Math.round(Number(exercise.sets)) : null,
+          reps: exercise.reps || null,
+          duration_minutes: exercise.duration_minutes ? Math.round(Number(exercise.duration_minutes)) : null,
+          rest_seconds: exercise.rest_seconds ? Math.round(Number(exercise.rest_seconds)) : null,
+          notes: exercise.notes || null,
+          order_index: exercise.order_index,
         }))
 
         const { error: exercisesError } = await supabase.from("exercises").insert(exercisesToInsert)

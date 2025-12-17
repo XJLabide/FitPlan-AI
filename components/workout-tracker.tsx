@@ -9,8 +9,9 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { ArrowLeft, Trophy, PartyPopper } from "lucide-react"
+import { ArrowLeft, Trophy, PartyPopper, Check } from "lucide-react"
+import { WorkoutTimer } from "@/components/workout-timer"
+import { cn } from "@/lib/utils"
 
 interface Exercise {
   id: string
@@ -86,6 +87,7 @@ export function WorkoutTracker({ workout, previousLogs = {} }: { workout: Workou
   const [error, setError] = useState<string | null>(null)
   const [hasChanges, setHasChanges] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0)
 
   const isWorkoutCompleted = workout.completed
 
@@ -266,250 +268,107 @@ export function WorkoutTracker({ workout, previousLogs = {} }: { workout: Workou
         </CardHeader>
       </Card>
 
-      {/* Exercises */}
-      {workout.exercises.map((exercise, idx) => (
-        <Card key={exercise.id} className="border-zinc-800 bg-zinc-900">
-          <CardHeader
-            className="cursor-pointer"
-            onClick={() => {
-              if (!isWorkoutCompleted) {
-                setExerciseCompleted((prev) => ({ ...prev, [exercise.id]: !prev[exercise.id] }))
-                setHasChanges(true)
-              }
-            }}
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-3">
-                  <Checkbox
-                    id={`completed-${exercise.id}`}
-                    checked={exerciseCompleted[exercise.id]}
-                    onCheckedChange={(checked) => {
-                      setExerciseCompleted((prev) => ({ ...prev, [exercise.id]: checked as boolean }))
-                      setHasChanges(true)
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                  <Label htmlFor={`completed-${exercise.id}`} className="cursor-pointer text-lg font-semibold text-white">
-                    {idx + 1}. {exercise.exercise_name}
-                  </Label>
-                </div>
-                {exercise.notes && <p className="ml-9 mt-2 text-sm text-zinc-400">{exercise.notes}</p>}
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Planned Details */}
-            <div className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-4">
-              <h4 className="mb-2 text-sm font-semibold text-zinc-400">Planned</h4>
-              <div className="flex flex-wrap gap-4 text-sm text-zinc-300">
-                {exercise.sets && <span>Sets: {exercise.sets}</span>}
-                {exercise.reps && <span>Reps: {exercise.reps}</span>}
-                {exercise.duration_minutes && <span>Duration: {exercise.duration_minutes} min</span>}
-                {exercise.rest_seconds && <span>Rest: {exercise.rest_seconds}s</span>}
-              </div>
-            </div>
+      {/* Workout Timer */}
+      {!isWorkoutCompleted && (
+        <WorkoutTimer
+          exercises={workout.exercises}
+          currentExerciseIndex={currentExerciseIndex}
+          onExerciseChange={setCurrentExerciseIndex}
+          onComplete={(feeling, notes) => {
+            setSessionFeeling(feeling as typeof sessionFeeling)
+            setSessionNotes(notes)
+            handleCompleteWorkout()
+          }}
+          exerciseLogs={exerciseLogs}
+          onLogUpdate={(exerciseId, field, value) => {
+            updateExerciseLog(exerciseId, field, value)
+          }}
+          onExerciseComplete={(exerciseId) => {
+            setExerciseCompleted((prev) => ({ ...prev, [exerciseId]: true }))
+            setHasChanges(true)
+          }}
+          exerciseCompleted={exerciseCompleted}
+        />
+      )}
 
-            {/* Actual Performance */}
-            {(exerciseCompleted[exercise.id] || isWorkoutCompleted) && (
-              <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-white">
-                  {isWorkoutCompleted ? "Logged Performance" : "Log Your Performance"}
-                </h4>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {exercise.sets && (
-                    <div className="space-y-2">
-                      <Label htmlFor={`sets-${exercise.id}`} className="text-sm text-zinc-300">
-                        Sets Completed
-                      </Label>
-                      <Input
-                        id={`sets-${exercise.id}`}
-                        type="number"
-                        value={exerciseLogs[exercise.id]?.sets_completed || ""}
-                        onChange={(e) =>
-                          updateExerciseLog(exercise.id, "sets_completed", Number.parseInt(e.target.value))
-                        }
-                        className="border-zinc-800 bg-zinc-800 text-white"
-                      />
-                    </div>
-                  )}
-                  {exercise.reps && (
-                    <div className="space-y-2">
-                      <Label htmlFor={`reps-${exercise.id}`} className="text-sm text-zinc-300">
-                        Reps Completed
-                      </Label>
-                      <Input
-                        id={`reps-${exercise.id}`}
-                        type="text"
-                        value={exerciseLogs[exercise.id]?.reps_completed || ""}
-                        onChange={(e) => updateExerciseLog(exercise.id, "reps_completed", e.target.value)}
-                        className="border-zinc-800 bg-zinc-800 text-white"
-                      />
-                    </div>
-                  )}
-                  <div className="space-y-2">
-                    <Label htmlFor={`weight-${exercise.id}`} className="text-sm text-zinc-300">
-                      Weight Used (kg)
-                    </Label>
-                    <Input
-                      id={`weight-${exercise.id}`}
-                      type="number"
-                      step="0.5"
-                      value={exerciseLogs[exercise.id]?.weight_used || ""}
-                      onChange={(e) => updateExerciseLog(exercise.id, "weight_used", Number.parseFloat(e.target.value))}
-                      className="border-zinc-800 bg-zinc-800 text-white"
-                    />
-                  </div>
-                  {exercise.duration_minutes && (
-                    <div className="space-y-2">
-                      <Label htmlFor={`duration-${exercise.id}`} className="text-sm text-zinc-300">
-                        Duration (min)
-                      </Label>
-                      <Input
-                        id={`duration-${exercise.id}`}
-                        type="number"
-                        value={exerciseLogs[exercise.id]?.duration_minutes || ""}
-                        onChange={(e) =>
-                          updateExerciseLog(exercise.id, "duration_minutes", Number.parseInt(e.target.value))
-                        }
-                        className="border-zinc-800 bg-zinc-800 text-white"
-                      />
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor={`notes-${exercise.id}`} className="text-sm text-zinc-300">
-                    Exercise Notes (Optional)
-                  </Label>
-                  <Textarea
-                    id={`notes-${exercise.id}`}
-                    placeholder="How did this exercise feel? Any observations?"
-                    value={exerciseLogs[exercise.id]?.notes || ""}
-                    onChange={(e) => updateExerciseLog(exercise.id, "notes", e.target.value)}
-                    rows={2}
-                    className="border-zinc-800 bg-zinc-800 text-white placeholder:text-zinc-600"
-                  />
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ))}
+      {/* Exercise List Header - sticky on mobile */}
+      <div className="flex items-center justify-between sticky top-0 z-10 bg-zinc-950 py-2 -mx-4 px-4 md:-mx-6 md:px-6 border-b border-zinc-800">
+        <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">
+          Exercises ({Object.values(exerciseCompleted).filter(Boolean).length}/{workout.exercises.length})
+        </h3>
+      </div>
 
-      {/* Session Summary */}
-      <Card className="border-zinc-800 bg-zinc-900">
-        <CardHeader>
-          <CardTitle className="text-white">Workout Summary</CardTitle>
-          <CardDescription className="text-zinc-400">How did the overall workout feel?</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-3">
-            <Label className="text-zinc-300">Overall Difficulty</Label>
-            <RadioGroup
-              value={sessionFeeling}
-              onValueChange={(value) => setSessionFeeling(value as typeof sessionFeeling)}
+      {/* Exercises - Simple Static List */}
+      <div className="space-y-1">
+        {workout.exercises.map((exercise, idx) => {
+          const isCurrent = idx === currentExerciseIndex && !isWorkoutCompleted
+          const isComplete = exerciseCompleted[exercise.id]
+
+          return (
+            <div
+              key={exercise.id}
+              onClick={() => {
+                if (!isWorkoutCompleted) {
+                  setCurrentExerciseIndex(idx)
+                }
+              }}
+              className={cn(
+                "flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all",
+                isCurrent
+                  ? "bg-orange-500/10 border border-orange-500"
+                  : isComplete
+                    ? "bg-green-500/5 border border-green-500/30"
+                    : "bg-zinc-900/50 border border-transparent hover:bg-zinc-800/50"
+              )}
             >
-              <div className="flex items-center space-x-3 rounded-lg border border-zinc-800 bg-zinc-950/50 p-3">
-                <RadioGroupItem value="easy" id="easy" />
-                <Label htmlFor="easy" className="flex-1 cursor-pointer text-white">
-                  Easy
-                </Label>
+              {/* Number/Check */}
+              <div className={cn(
+                "flex items-center justify-center w-7 h-7 rounded-full text-sm font-semibold flex-shrink-0",
+                isComplete
+                  ? "bg-green-500 text-white"
+                  : isCurrent
+                    ? "bg-orange-500 text-white"
+                    : "bg-zinc-800 text-zinc-400"
+              )}>
+                {isComplete ? <Check className="h-4 w-4" /> : idx + 1}
               </div>
-              <div className="flex items-center space-x-3 rounded-lg border border-zinc-800 bg-zinc-950/50 p-3">
-                <RadioGroupItem value="moderate" id="moderate" />
-                <Label htmlFor="moderate" className="flex-1 cursor-pointer text-white">
-                  Moderate
-                </Label>
-              </div>
-              <div className="flex items-center space-x-3 rounded-lg border border-zinc-800 bg-zinc-950/50 p-3">
-                <RadioGroupItem value="hard" id="hard" />
-                <Label htmlFor="hard" className="flex-1 cursor-pointer text-white">
-                  Hard
-                </Label>
-              </div>
-              <div className="flex items-center space-x-3 rounded-lg border border-zinc-800 bg-zinc-950/50 p-3">
-                <RadioGroupItem value="very_hard" id="very_hard" />
-                <Label htmlFor="very_hard" className="flex-1 cursor-pointer text-white">
-                  Very Hard
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="session-notes" className="text-zinc-300">Session Notes (Optional)</Label>
-            <Textarea
-              id="session-notes"
-              placeholder="How did you feel during the workout? Any achievements or challenges?"
-              value={sessionNotes}
-              onChange={(e) => setSessionNotes(e.target.value)}
-              rows={3}
-              className="border-zinc-800 bg-zinc-800 text-white placeholder:text-zinc-600"
-            />
-          </div>
-
-          {error && <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
-
-          {isWorkoutCompleted ? (
-            /* For completed workouts, show Update button only when changes are made */
-            hasChanges && (
-              <Button onClick={handleCompleteWorkout} disabled={isSaving} size="lg" className="w-full bg-orange-500 text-white hover:bg-orange-600">
-                {isSaving ? "Updating..." : "Update Workout"}
-              </Button>
-            )
-          ) : (
-            /* For new workouts, show Complete Workout button */
-            <div className="space-y-3">
-              <Button
-                onClick={() => {
-                  if (!allCompleted) {
-                    // Mark all exercises as complete
-                    const allCompleted = workout.exercises.reduce((acc, ex) => ({
-                      ...acc,
-                      [ex.id]: true
-                    }), {} as Record<string, boolean>)
-                    setExerciseCompleted(allCompleted)
-                    setHasChanges(true)
-                  } else {
-                    // Complete the workout
-                    handleCompleteWorkout()
-                  }
-                }}
-                disabled={isSaving}
-                size="lg"
-                className="w-full bg-orange-500 text-white hover:bg-orange-600"
-              >
-                {isSaving ? "Saving..." : allCompleted ? "Complete Workout" : "Mark All Exercises as Complete"}
-              </Button>
-
-              {/* Unmark All button - shows when any exercise is checked */}
-              {Object.values(exerciseCompleted).some(v => v) && (
-                <Button
-                  onClick={() => {
-                    const noneCompleted = workout.exercises.reduce((acc, ex) => ({
-                      ...acc,
-                      [ex.id]: false
-                    }), {} as Record<string, boolean>)
-                    setExerciseCompleted(noneCompleted)
-                    setHasChanges(true)
-                  }}
-                  variant="outline"
-                  size="lg"
-                  className="w-full border-zinc-800 bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white"
-                >
-                  Unmark All Exercises
-                </Button>
-              )}
-
-              {!allCompleted && (
-                <p className="text-center text-sm text-zinc-500">
-                  Tap any exercise card to check/uncheck it
+              {/* Exercise Info */}
+              <div className="flex-1 min-w-0">
+                <p className={cn(
+                  "font-medium truncate",
+                  isComplete ? "text-green-400" : "text-white"
+                )}>
+                  {exercise.exercise_name}
                 </p>
+                <p className="text-xs text-zinc-500">
+                  {exercise.sets && `${exercise.sets} sets`}
+                  {exercise.reps && ` • ${exercise.reps}`}
+                </p>
+              </div>
+
+              {/* Weight logged indicator */}
+              {isComplete && exerciseLogs[exercise.id]?.weight_used > 0 && (
+                <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                  {exerciseLogs[exercise.id].weight_used}kg
+                </span>
               )}
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+          )
+        })}
+      </div>
+
+      {/* Error display */}
+      {error && (
+        <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+      )}
+
+      {/* Update button for already completed workouts */}
+      {isWorkoutCompleted && hasChanges && (
+        <Button onClick={handleCompleteWorkout} disabled={isSaving} size="lg" className="w-full bg-orange-500 text-white hover:bg-orange-600">
+          {isSaving ? "Updating..." : "Update Workout"}
+        </Button>
+      )}
+    </div >
   )
 }

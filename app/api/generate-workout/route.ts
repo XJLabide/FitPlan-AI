@@ -1,7 +1,6 @@
 import { generateText } from "ai"
 import { createOpenAI } from "@ai-sdk/openai"
 import { NextResponse } from "next/server"
-import { z } from "zod"
 
 export const maxDuration = 60
 
@@ -14,10 +13,13 @@ export async function POST(request: Request) {
   try {
     const { prompt } = await request.json()
 
+    // Add timestamp and random seed to prompt for uniqueness
+    const uniquePrompt = `${prompt}\n\nGeneration timestamp: ${Date.now()}\nVariation seed: ${Math.random().toString(36).substring(7)}`
+
     const { text } = await generateText({
       model: openrouter("google/gemini-2.0-flash-001"),
-      prompt,
-      temperature: 0.7,
+      prompt: uniquePrompt,
+      temperature: 0.9,
     })
 
     // Extract JSON from the response (in case there's extra text)

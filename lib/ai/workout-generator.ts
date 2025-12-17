@@ -58,6 +58,43 @@ function buildWorkoutPrompt(data: OnboardingData): string {
     advanced: "an advanced athlete with extensive training experience",
   }
 
+  // Exercise library - ONLY use exercises from this list
+  const exerciseLibrary = `
+APPROVED EXERCISE LIST (You MUST only use exercises from this list):
+
+CHEST:
+- Bench Press, Incline Bench Press, Decline Bench Press, Dumbbell Bench Press
+- Push-ups, Wide Push-ups, Diamond Push-ups
+- Chest Fly, Dumbbell Fly, Cable Fly
+
+BACK:
+- Pull-ups, Chin-ups, Lat Pulldown
+- Bent Over Row, Barbell Row, Dumbbell Row, Seated Row, Cable Row
+- Deadlift, Romanian Deadlift, Stiff-Leg Deadlift
+
+SHOULDERS:
+- Shoulder Press, Overhead Press, Military Press, Dumbbell Shoulder Press, Arnold Press
+- Lateral Raise, Side Raise, Front Raise
+
+ARMS:
+- Bicep Curl, Dumbbell Curl, Barbell Curl, Hammer Curl, Preacher Curl, Concentration Curl
+- Tricep Extension, Skull Crusher, Overhead Tricep Extension, Tricep Pushdown
+- Dips, Tricep Dip, Bench Dip
+
+LEGS:
+- Squat, Back Squat, Front Squat, Goblet Squat, Bodyweight Squat
+- Leg Press
+- Lunge, Walking Lunge, Reverse Lunge, Dumbbell Lunge
+- Leg Curl, Hamstring Curl, Lying Leg Curl
+- Leg Extension
+- Calf Raise, Standing Calf Raise, Seated Calf Raise
+
+CORE:
+- Crunch, Crunches, Bicycle Crunch, Reverse Crunch, Cable Crunch
+- Plank, Side Plank, Forearm Plank
+- Hyperextension, Back Extension
+`
+
   return `Create a personalized workout plan for ${levelDescriptions[data.fitness_level]} whose primary goal is to ${goalDescriptions[data.primary_goal]}.
 
 /*
@@ -80,6 +117,13 @@ function buildWorkoutPrompt(data: OnboardingData): string {
     ${data.available_days[4] ? `- Workout 5 (day_number: 5) must be for ${data.available_days[4]}` : ""}
     ${data.available_days[5] ? `- Workout 6 (day_number: 6) must be for ${data.available_days[5]}` : ""}
     ${data.available_days[6] ? `- Workout 7 (day_number: 7) must be for ${data.available_days[6]}` : ""}
+
+    ${exerciseLibrary}
+
+    CRITICAL EXERCISE CONSTRAINT:
+    - You MUST ONLY use exercises from the APPROVED EXERCISE LIST above
+    - DO NOT invent or use any exercises not in the list
+    - Each exercise name must match one from the list exactly
     
     Return a JSON object with this exact structure:
     {
@@ -91,11 +135,11 @@ function buildWorkoutPrompt(data: OnboardingData): string {
           "workout_name": "string (format: '[DayName] - [Focus]', e.g., '${data.available_days[0] || "Monday"} - Upper Body')",
           "exercises": [
             {
-              "exercise_name": "string",
-              "sets": number,
+              "exercise_name": "string (MUST be from approved list)",
+              "sets": integer (whole number only, no decimals),
               "reps": "string",
-              "duration_minutes": number (optional),
-              "rest_seconds": number,
+              "duration_minutes": integer (optional, whole number only),
+              "rest_seconds": integer (whole number only, no decimals like 0.5),
               "notes": "string (optional)",
               "order_index": number
             }
@@ -103,5 +147,12 @@ function buildWorkoutPrompt(data: OnboardingData): string {
         }
       ]
     }
+    
+    IMPORTANT VARIATION RULES:
+    - Generate a UNIQUE and DIFFERENT workout plan each time
+    - Use VARIETY in exercise selection from the approved list
+    - Mix up the workout structure and exercise order
+    - Include a variety of compound and isolation movements
+    - All numeric values for sets, rest_seconds, and duration_minutes MUST be whole integers (no decimals)
   */`
 }
