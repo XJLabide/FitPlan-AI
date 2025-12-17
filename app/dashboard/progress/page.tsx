@@ -43,14 +43,14 @@ export default async function ProgressPage() {
   return (
     <div className="min-h-screen bg-zinc-950">
       <DashboardNav />
-      <div className="mx-auto max-w-7xl space-y-6 p-6">
+      <div className="mx-auto max-w-7xl space-y-4 md:space-y-6 p-4 md:p-6">
         <div>
-          <h1 className="text-3xl font-bold text-white">Your Progress</h1>
-          <p className="text-zinc-400">Track your workout history and performance improvements</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-white">Your Progress</h1>
+          <p className="text-sm md:text-base text-zinc-400">Track your workout history and performance improvements</p>
         </div>
 
         {/* Stats */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
           <Card className="border-zinc-800 bg-zinc-900">
             <CardHeader className="pb-3">
               <CardDescription className="text-zinc-400">Total Sessions</CardDescription>

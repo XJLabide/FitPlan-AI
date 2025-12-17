@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Trophy, PartyPopper } from "lucide-react"
 
 interface Exercise {
   id: string
@@ -85,6 +85,7 @@ export function WorkoutTracker({ workout, previousLogs = {} }: { workout: Workou
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [hasChanges, setHasChanges] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
 
   const isWorkoutCompleted = workout.completed
 
@@ -166,8 +167,13 @@ export function WorkoutTracker({ workout, previousLogs = {} }: { workout: Workou
         }
       }
 
-      router.push("/dashboard")
-      router.refresh()
+      // Show success popup instead of immediately redirecting
+      if (allExercisesCompleted) {
+        setShowSuccess(true)
+      } else {
+        router.push("/dashboard")
+        router.refresh()
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save workout")
     } finally {
@@ -179,6 +185,60 @@ export function WorkoutTracker({ workout, previousLogs = {} }: { workout: Workou
 
   return (
     <div className="space-y-6">
+      {/* Celebration Success Modal */}
+      {showSuccess && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="relative mx-4 w-full max-w-md animate-in zoom-in-95 fade-in duration-300">
+            <Card className="border-orange-500/30 bg-zinc-900 overflow-hidden">
+              {/* Animated background gradient */}
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-transparent to-green-500/20 animate-pulse" />
+
+              <CardContent className="relative py-12 text-center">
+                {/* Trophy Icon with animation */}
+                <div className="mb-6 flex justify-center">
+                  <div className="relative">
+                    <div className="absolute inset-0 animate-ping rounded-full bg-orange-500/30" />
+                    <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-orange-600 shadow-lg shadow-orange-500/30">
+                      <Trophy className="h-12 w-12 text-white" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Congratulations text */}
+                <h2 className="mb-2 text-2xl font-bold text-white">🎉 Workout Complete!</h2>
+                <p className="mb-6 text-zinc-400">
+                  Amazing job crushing your workout! Keep up the great work on your fitness journey.
+                </p>
+
+                {/* Motivational stats */}
+                <div className="mb-6 flex justify-center gap-4">
+                  <div className="rounded-lg bg-zinc-800/50 px-4 py-2">
+                    <div className="text-2xl font-bold text-orange-400">{workout.exercises.length}</div>
+                    <div className="text-xs text-zinc-500">Exercises</div>
+                  </div>
+                  <div className="rounded-lg bg-zinc-800/50 px-4 py-2">
+                    <div className="text-2xl font-bold text-green-400">✓</div>
+                    <div className="text-xs text-zinc-500">Completed</div>
+                  </div>
+                </div>
+
+                {/* Continue button */}
+                <Button
+                  onClick={() => {
+                    router.push("/dashboard")
+                    router.refresh()
+                  }}
+                  size="lg"
+                  className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 shadow-lg shadow-orange-500/25"
+                >
+                  <PartyPopper className="mr-2 h-5 w-5" />
+                  Continue to Dashboard
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
       {/* Back Button */}
       <Button
         variant="ghost"
@@ -209,16 +269,26 @@ export function WorkoutTracker({ workout, previousLogs = {} }: { workout: Workou
       {/* Exercises */}
       {workout.exercises.map((exercise, idx) => (
         <Card key={exercise.id} className="border-zinc-800 bg-zinc-900">
-          <CardHeader>
+          <CardHeader
+            className="cursor-pointer"
+            onClick={() => {
+              if (!isWorkoutCompleted) {
+                setExerciseCompleted((prev) => ({ ...prev, [exercise.id]: !prev[exercise.id] }))
+                setHasChanges(true)
+              }
+            }}
+          >
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-3">
                   <Checkbox
                     id={`completed-${exercise.id}`}
                     checked={exerciseCompleted[exercise.id]}
-                    onCheckedChange={(checked) =>
+                    onCheckedChange={(checked) => {
                       setExerciseCompleted((prev) => ({ ...prev, [exercise.id]: checked as boolean }))
-                    }
+                      setHasChanges(true)
+                    }}
+                    onClick={(e) => e.stopPropagation()}
                   />
                   <Label htmlFor={`completed-${exercise.id}`} className="cursor-pointer text-lg font-semibold text-white">
                     {idx + 1}. {exercise.exercise_name}
@@ -389,17 +459,54 @@ export function WorkoutTracker({ workout, previousLogs = {} }: { workout: Workou
             )
           ) : (
             /* For new workouts, show Complete Workout button */
-            <>
-              <Button onClick={handleCompleteWorkout} disabled={!allCompleted || isSaving} size="lg" className="w-full bg-orange-500 text-white hover:bg-orange-600">
+            <div className="space-y-3">
+              <Button
+                onClick={() => {
+                  if (!allCompleted) {
+                    // Mark all exercises as complete
+                    const allCompleted = workout.exercises.reduce((acc, ex) => ({
+                      ...acc,
+                      [ex.id]: true
+                    }), {} as Record<string, boolean>)
+                    setExerciseCompleted(allCompleted)
+                    setHasChanges(true)
+                  } else {
+                    // Complete the workout
+                    handleCompleteWorkout()
+                  }
+                }}
+                disabled={isSaving}
+                size="lg"
+                className="w-full bg-orange-500 text-white hover:bg-orange-600"
+              >
                 {isSaving ? "Saving..." : allCompleted ? "Complete Workout" : "Mark All Exercises as Complete"}
               </Button>
 
+              {/* Unmark All button - shows when any exercise is checked */}
+              {Object.values(exerciseCompleted).some(v => v) && (
+                <Button
+                  onClick={() => {
+                    const noneCompleted = workout.exercises.reduce((acc, ex) => ({
+                      ...acc,
+                      [ex.id]: false
+                    }), {} as Record<string, boolean>)
+                    setExerciseCompleted(noneCompleted)
+                    setHasChanges(true)
+                  }}
+                  variant="outline"
+                  size="lg"
+                  className="w-full border-zinc-800 bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                >
+                  Unmark All Exercises
+                </Button>
+              )}
+
               {!allCompleted && (
                 <p className="text-center text-sm text-zinc-500">
-                  Check off all exercises to complete this workout
+                  Tap any exercise card to check/uncheck it
                 </p>
               )}
-            </>
+            </div>
           )}
         </CardContent>
       </Card>

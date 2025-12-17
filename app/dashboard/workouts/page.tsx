@@ -36,11 +36,11 @@ export default async function WorkoutsPage() {
   return (
     <div className="min-h-screen bg-zinc-950">
       <DashboardNav />
-      <div className="mx-auto max-w-7xl space-y-6 p-6">
-        <div className="flex items-center justify-between">
+      <div className="mx-auto max-w-7xl space-y-4 md:space-y-6 p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-white">Your Workouts</h1>
-            <p className="text-zinc-400">View and manage all your workout sessions</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-white">Your Workouts</h1>
+            <p className="text-sm md:text-base text-zinc-400">View and manage all your workout sessions</p>
           </div>
           {activePlan && (
             <Button asChild variant="outline" className="border-zinc-800 bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white">
@@ -50,7 +50,7 @@ export default async function WorkoutsPage() {
         </div>
 
         {activePlan && workouts && workouts.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-2">
             {workouts.map((workout) => (
               <Card key={workout.id} className="border-zinc-800 bg-zinc-900">
                 <CardHeader>
@@ -84,7 +84,7 @@ export default async function WorkoutsPage() {
                       </div>
                     )}
                   </div>
-                  <Button asChild className={`mt-4 w-full ${workout.completed ? 'border-zinc-800 bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white' : 'bg-orange-500 text-white hover:bg-orange-600'}`}>
+                  <Button asChild className={`mt-4 w-full ${workout.completed ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-orange-500 text-white hover:bg-orange-600'}`}>
                     <Link href={`/dashboard/workouts/${workout.id}`}>
                       {workout.completed ? "View Details" : "Start Workout"}
                     </Link>

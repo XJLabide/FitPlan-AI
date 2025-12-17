@@ -65,11 +65,11 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-zinc-950">
       <DashboardNav />
-      <div className="mx-auto max-w-7xl space-y-6 p-6">
-        <div className="flex items-center justify-between">
+      <div className="mx-auto max-w-7xl space-y-4 md:space-y-6 p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-white">Welcome Back</h1>
-            <p className="text-zinc-400">Stay consistent with your fitness journey</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-white">Welcome Back</h1>
+            <p className="text-sm md:text-base text-zinc-400">Stay consistent with your fitness journey</p>
           </div>
           <div className="flex gap-3">
             {activePlan ? (
@@ -94,7 +94,7 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
           <Card className="border-zinc-800 bg-zinc-900">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">

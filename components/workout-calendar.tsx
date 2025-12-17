@@ -90,26 +90,26 @@ export function WorkoutCalendar({ workouts }: WorkoutCalendarProps) {
 
   return (
     <Card className="border-zinc-800 bg-zinc-900">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-white">Weekly Schedule</CardTitle>
+      <CardHeader className="pb-3 md:pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <CardTitle className="text-base md:text-lg text-white">Weekly Schedule</CardTitle>
           <div className="flex items-center gap-2">
             <Button
               onClick={previousWeek}
               variant="outline"
               size="icon"
-              className="border-zinc-800 bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white"
+              className="h-8 w-8 border-zinc-800 bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="min-w-[180px] text-center font-semibold text-white">
+            <span className="min-w-[140px] md:min-w-[180px] text-center text-sm md:text-base font-semibold text-white">
               {headerText}
             </span>
             <Button
               onClick={nextWeek}
               variant="outline"
               size="icon"
-              className="border-zinc-800 bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white"
+              className="h-8 w-8 border-zinc-800 bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -117,7 +117,7 @@ export function WorkoutCalendar({ workouts }: WorkoutCalendarProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-1 md:gap-2">
           {/* Day headers */}
           {dayNames.map((day) => (
             <div key={day} className="p-2 text-center text-sm font-semibold text-zinc-400">

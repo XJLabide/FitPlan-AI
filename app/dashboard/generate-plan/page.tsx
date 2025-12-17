@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { generateWorkoutPlan } from "@/lib/ai/workout-generator"
 import type { GeneratedWorkoutPlan } from "@/lib/ai/workout-generator"
 import type { OnboardingData } from "@/lib/types"
-import { ArrowLeft, Plus, Sparkles, Edit, Trash2, Save } from "lucide-react"
+import { ArrowLeft, Plus, Sparkles, Edit, Trash2, Save, Dumbbell } from "lucide-react"
 import Link from "next/link"
 
 interface CurrentPlan {
@@ -465,9 +465,64 @@ function GeneratePlanContent() {
       </div>
     )
   }
+  // Full-screen loading animation when generating
+  if (isGenerating) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950">
+        <div className="relative text-center">
+          {/* Animated background circles */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute h-64 w-64 animate-ping rounded-full bg-orange-500/10" style={{ animationDuration: '3s' }} />
+            <div className="absolute h-48 w-48 animate-ping rounded-full bg-orange-500/20" style={{ animationDuration: '2s' }} />
+            <div className="absolute h-32 w-32 animate-ping rounded-full bg-orange-500/30" style={{ animationDuration: '1s' }} />
+          </div>
+
+          {/* Main spinner container */}
+          <div className="relative mb-8">
+            {/* Outer rotating ring */}
+            <div className="h-32 w-32 animate-spin rounded-full border-4 border-zinc-800" style={{ animationDuration: '3s' }}>
+              <div className="absolute left-0 top-0 h-4 w-4 -translate-x-1 -translate-y-1 rounded-full bg-orange-500" />
+            </div>
+
+            {/* Inner counter-rotating ring */}
+            <div className="absolute inset-4 animate-spin rounded-full border-4 border-zinc-700" style={{ animationDuration: '2s', animationDirection: 'reverse' }}>
+              <div className="absolute right-0 top-1/2 h-3 w-3 translate-x-1 -translate-y-1/2 rounded-full bg-green-500" />
+            </div>
+
+            {/* Center icon */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-orange-600 shadow-lg shadow-orange-500/30">
+                <Dumbbell className="h-8 w-8 text-white animate-pulse" />
+              </div>
+            </div>
+          </div>
+
+          {/* Text content */}
+          <h2 className="mb-2 text-2xl font-bold text-white">Creating Your Workout Plan</h2>
+          <p className="mb-4 text-zinc-400">Our AI is designing your personalized routine...</p>
+
+          {/* Animated steps */}
+          <div className="flex flex-col gap-2 text-sm">
+            <div className="flex items-center justify-center gap-2 text-green-400 animate-pulse">
+              <div className="h-2 w-2 rounded-full bg-green-400" />
+              Analyzing your goals...
+            </div>
+            <div className="flex items-center justify-center gap-2 text-orange-400 animate-pulse" style={{ animationDelay: '0.5s' }}>
+              <div className="h-2 w-2 rounded-full bg-orange-400" />
+              Selecting exercises...
+            </div>
+            <div className="flex items-center justify-center gap-2 text-zinc-500 animate-pulse" style={{ animationDelay: '1s' }}>
+              <div className="h-2 w-2 rounded-full bg-zinc-500" />
+              Building weekly schedule...
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-zinc-950 p-6">
+    <div className="min-h-screen bg-zinc-950 p-4 md:p-6">
       <div className="mx-auto max-w-4xl space-y-6">
         {/* Back Button */}
         <Link href="/dashboard">
