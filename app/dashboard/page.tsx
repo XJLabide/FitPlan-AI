@@ -28,12 +28,14 @@ export default async function DashboardPage() {
     .limit(1)
     .maybeSingle()
 
-  // Fetch workouts for the active plan
-  const { data: workouts } = await supabase
-    .from("workouts")
-    .select("*, exercises(*)")
-    .eq("user_id", user.id)
-    .order("day_number", { ascending: true })
+  // Fetch workouts for the active plan only
+  const { data: workouts } = activePlan
+    ? await supabase
+      .from("workouts")
+      .select("*, exercises(*)")
+      .eq("plan_id", activePlan.id)
+      .order("day_number", { ascending: true })
+    : { data: [] }
 
   // Fetch recent workout sessions
   const { data: recentSessions } = await supabase
@@ -192,7 +194,7 @@ export default async function DashboardPage() {
                         <Button asChild size="sm" className="h-8 bg-orange-500 text-xs text-white hover:bg-orange-600">
                           <Link href={`/dashboard/workouts/${workout.id}`}>
                             <Play className="mr-1 h-3 w-3" />
-                            Start
+                            {workout.completed ? "Redo" : "Start"}
                           </Link>
                         </Button>
                       </div>
@@ -222,7 +224,7 @@ export default async function DashboardPage() {
           )}
 
           {/* Recent Workout Logs - Always Visible */}
-          <Card className="border-zinc-800 bg-zinc-900 h-fit">
+          <Card className="border-zinc-800 bg-zinc-900 h-full flex flex-col">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -242,7 +244,7 @@ export default async function DashboardPage() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1">
               {recentSessions && recentSessions.length > 0 ? (
                 <div className="space-y-3">
                   {recentSessions.map((session) => (

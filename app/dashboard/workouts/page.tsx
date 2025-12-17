@@ -24,12 +24,14 @@ export default async function WorkoutsPage() {
     .eq("is_active", true)
     .single()
 
-  // Fetch all workouts
-  const { data: workouts } = await supabase
-    .from("workouts")
-    .select("*, exercises(*)")
-    .eq("user_id", user.id)
-    .order("day_number", { ascending: true })
+  // Fetch all workouts for the active plan only
+  const { data: workouts } = activePlan
+    ? await supabase
+      .from("workouts")
+      .select("*, exercises(*)")
+      .eq("plan_id", activePlan.id)
+      .order("day_number", { ascending: true })
+    : { data: [] }
 
   return (
     <div className="min-h-screen bg-zinc-950">
