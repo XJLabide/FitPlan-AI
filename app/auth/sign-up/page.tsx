@@ -37,7 +37,6 @@ export default function SignUpPage() {
         email,
         password,
         options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/onboarding`,
           data: {
             display_name: displayName,
           },
@@ -53,7 +52,9 @@ export default function SignUpPage() {
         return
       }
 
-      router.push("/auth/sign-up-success")
+      // Redirect directly to onboarding (no email confirmation required)
+      router.push("/onboarding")
+      router.refresh()
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred")
     } finally {
