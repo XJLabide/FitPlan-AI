@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { generateWorkoutPlan } from "@/lib/ai/workout-generator"
 import type { GeneratedWorkoutPlan } from "@/lib/ai/workout-generator"
 import type { OnboardingData } from "@/lib/types"
-import { ArrowLeft, Plus, Sparkles, Edit, Trash2, Save, Dumbbell } from "lucide-react"
+import { ArrowLeft, Plus, Sparkles, Edit, Trash2, Save, Dumbbell, RefreshCw, User } from "lucide-react"
 import Link from "next/link"
 
 interface CurrentPlan {
@@ -57,7 +57,7 @@ function GeneratePlanContent() {
   const [isSaving, setIsSaving] = useState(false)
   const [currentPlan, setCurrentPlan] = useState<CurrentPlan | null>(null)
   const [isLoadingPlan, setIsLoadingPlan] = useState(true)
-  const [mode, setMode] = useState<"view" | "generate" | "customize">("view")
+  const [mode, setMode] = useState<"view" | "generate" | "customize" | "profile-select">("view")
   const [editablePlan, setEditablePlan] = useState<CurrentPlan | null>(null)
   const [isSavingEdits, setIsSavingEdits] = useState(false)
 
@@ -553,14 +553,14 @@ function GeneratePlanContent() {
               <Button
                 onClick={() => {
                   setGeneratedPlan(null)
-                  handleGenerate()
+                  setMode("profile-select")
                 }}
                 disabled={isGenerating}
                 variant="outline"
                 className="border-zinc-800 bg-zinc-900 text-white hover:bg-zinc-800"
               >
                 <Plus className="mr-2 h-4 w-4" />
-                {isGenerating ? "Generating..." : "Create New Plan"}
+                Create New Plan
               </Button>
               <Button
                 onClick={enterEditMode}
@@ -701,25 +701,123 @@ function GeneratePlanContent() {
           </div>
         )}
 
+        {/* Mode: Profile Selection for New Plan */}
+        {mode === "profile-select" && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-orange-500" />
+              <span className="text-lg font-semibold text-white">Generate New Plan</span>
+            </div>
+
+            <Card className="border-zinc-800 bg-zinc-900">
+              <CardHeader>
+                <CardTitle className="text-white">Choose Your Profile Data</CardTitle>
+                <CardDescription className="text-zinc-400">
+                  Would you like to generate a new plan using your current profile, or update your fitness information first?
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {/* Option 1: Use Current Profile */}
+                  <button
+                    onClick={() => {
+                      setMode("view")
+                      handleGenerate()
+                    }}
+                    className="group flex flex-col items-center gap-4 rounded-xl border-2 border-zinc-700 bg-zinc-800/50 p-6 text-center transition-all hover:border-orange-500 hover:bg-zinc-800"
+                  >
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-500/20 transition-colors group-hover:bg-orange-500/30">
+                      <User className="h-8 w-8 text-orange-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white">Use Current Profile</h3>
+                      <p className="mt-1 text-sm text-zinc-400">
+                        Generate a plan based on your existing fitness level, goals, and preferences
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Option 2: Redo Onboarding */}
+                  <button
+                    onClick={() => {
+                      router.push("/onboarding")
+                    }}
+                    className="group flex flex-col items-center gap-4 rounded-xl border-2 border-zinc-700 bg-zinc-800/50 p-6 text-center transition-all hover:border-green-500 hover:bg-zinc-800"
+                  >
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/20 transition-colors group-hover:bg-green-500/30">
+                      <RefreshCw className="h-8 w-8 text-green-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white">Update My Profile</h3>
+                      <p className="mt-1 text-sm text-zinc-400">
+                        Review and update your fitness goals, available days, and equipment first
+                      </p>
+                    </div>
+                  </button>
+                </div>
+
+                <Button
+                  onClick={() => setMode("view")}
+                  variant="outline"
+                  className="w-full border-zinc-800 bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Cancel
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Mode: No Current Plan */}
         {mode === "view" && !currentPlan && !generatedPlan && (
           <Card className="border-zinc-800 bg-zinc-900">
             <CardHeader>
               <CardTitle className="text-white">Ready to Get Started?</CardTitle>
               <CardDescription className="text-zinc-400">
-                Click below to generate a personalized workout plan tailored to your fitness level, goals, and available equipment.
+                Generate a personalized workout plan tailored to your fitness level, goals, and available equipment.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button
-                onClick={handleGenerate}
-                disabled={isGenerating}
-                size="lg"
-                className="w-full bg-orange-500 text-white hover:bg-orange-600"
-              >
-                <Sparkles className="mr-2 h-4 w-4" />
-                {isGenerating ? "Generating Your Plan..." : "Generate Workout Plan"}
-              </Button>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {/* Option 1: Use Current Profile */}
+                <button
+                  onClick={handleGenerate}
+                  disabled={isGenerating}
+                  className="group flex flex-col items-center gap-4 rounded-xl border-2 border-zinc-700 bg-zinc-800/50 p-6 text-center transition-all hover:border-orange-500 hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-500/20 transition-colors group-hover:bg-orange-500/30">
+                    <User className="h-8 w-8 text-orange-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-white">
+                      {isGenerating ? "Generating..." : "Use Current Profile"}
+                    </h3>
+                    <p className="mt-1 text-sm text-zinc-400">
+                      Generate a plan based on your existing fitness level, goals, and preferences
+                    </p>
+                  </div>
+                </button>
+
+                {/* Option 2: Redo Onboarding */}
+                <button
+                  onClick={() => {
+                    router.push("/onboarding")
+                  }}
+                  disabled={isGenerating}
+                  className="group flex flex-col items-center gap-4 rounded-xl border-2 border-zinc-700 bg-zinc-800/50 p-6 text-center transition-all hover:border-green-500 hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/20 transition-colors group-hover:bg-green-500/30">
+                    <RefreshCw className="h-8 w-8 text-green-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-white">Update My Profile</h3>
+                    <p className="mt-1 text-sm text-zinc-400">
+                      Review and update your fitness goals, available days, and equipment first
+                    </p>
+                  </div>
+                </button>
+              </div>
             </CardContent>
           </Card>
         )}

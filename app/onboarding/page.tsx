@@ -72,7 +72,7 @@ export default function OnboardingPage() {
       const { error: insertError } = await supabase.from("onboarding_data").upsert({
         user_id: user.id,
         ...formData,
-      })
+      }, { onConflict: 'user_id' })
 
       if (insertError) throw insertError
 
